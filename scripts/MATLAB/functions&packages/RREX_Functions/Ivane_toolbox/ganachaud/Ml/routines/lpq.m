@@ -1,0 +1,2 @@
+function lpq
+!lpq -Pgraphics

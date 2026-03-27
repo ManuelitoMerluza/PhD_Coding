@@ -1,0 +1,129 @@
+
+Matlab routines for the Ocean Scientist (1.4)  14/Mar/94
+--------------------------------------------------------
+
+This directory contains a number of Matlab routines that may be useful
+for anyone dealing with the ocean. Some of the routines that compute
+physical parameters have been converted from existing fortran routines,
+but have been changed to allow the passing of vectors and matrices in
+the usual Matlab style.  Loops have been avoided as much as possible in
+favour of vectorization, and so computations are in general very fast.
+
+All routines have been made into .m files rather than fmex/cmex files
+because the fmex/cmex  interface is crummy - You can't get help
+information, argument passing is obscure, and it is messy. 
+
+
+Currently available functions:
+
+a) Physical properties of seawater
+
+adiabattempgrad : adiabatic temperature gradient (used by
+                  potentialtemp, bvfreq, and soundspeed)
+         bvfreq : Bouyancy (Brunt-Vaisala) frequency
+          depth : Depth given pressure at some latitude
+  potentialtemp : Potential temperature (also used by bvfreq)
+       pressure : Pressure at given depth at some latitude
+     soundspeed : Speed of sound using various standard equations
+                  (del grosso, chen and millero, etc.)
+           swcp : Heat capacity for sea water
+   swfreezetemp : Freezing point of sea water
+        swstate : Equation of state for sea water (returns density and
+                  specific volume anomalies or derivatives of same w.r.t.
+                  S,T,P). Also used by bvfreq and soundspeed.
+
+
+2) Geographical/Geometrical Properties
+
+           dist : Range/bearing of points on the earth using various
+                  ellipsoids (wsg84, clarke66, etc.). Can also
+                  compute points along geodesics.
+         inside : Determines whether points are inside or outside an
+                  arbitrary polygon (useful for discriminating between land
+                  and water points, for example)
+
+3) Special plotting routines
+
+       cnv2imag : Converts interpolated pcolor pics to
+                  images (faster printing, discrete colours).
+      stickplot : Standard stickplot graph for vector time series 
+      tsdiagram : Draws a TS diagram, with density contours and freezing
+                  curve.
+           whoi : Draws the WHOI  logo in the bottom corner of a plot
+ (whoilogo.mat) : Bitmap info for WHOI logo.
+       worldmap : Draws a map of the world (uses the coasts.mat datafile)
+   (coasts.mat) : Coastline database for map (1/4 degree resolution).
+
+4) Miscellaneous
+
+       Contents : Help information
+        geodemo : A fun demo for map and dist
+         indemo : A demonstration program showing the capabilities of
+                  inside
+       integral : Time series integration using Simpsons Rule
+      stickdemo : demo program for stickplot
+
+
+Feel free to (ab)use these routines. If you like them, tell your
+friends. If you don't, or if you find any bugs, please tell
+me! Likewise if you have "improved" the routines. 
+
+
+
+Installation Notes
+------------------
+
+When ftp'ing the files, don't forget to set binary mode to get
+the whoilogo.mat and coasts.mat files!
+
+The easiest thing to do is to copy everything into ~/matlab. On 
+the other hand, a more permanent home may be underneath
+/usr/local/matlab/toolbox/oceans. If you put them there, change
+MATLABPATH (either in the matlab script or in .login). 
+
+Everything has been changed to work with Matlab 4.1. Some things will
+still work with older versions, but due to design changes in
+the user interface (notably the graphics and the changed usage
+of "ones" and "zeros") they may not. I am no longer interested
+in supporting older versions of Matlab!
+
+
+Changes since Version 1.0
+--------------------------
+
+-swstate.m can now also compute first derivatives w.r.t to S,T,P.
+-soundspeed.m can now also compute ssp using a direct evaluation of 
+ derivatives of the equation of state.
+
+
+Changes since Version 1.1
+-------------------------
+
+-geodesics computations in dist.
+-world map program and coastline database added.
+-demo program "geodesics" added.
+-tsdiagram...another little demo (which may even be useful).
+-whoi logo program (for that professional look!)
+
+Changes since Version 1.2
+-------------------------
+
+-demo program "indemo" for inside
+-point-in-polygon determination using "inside"
+-stickplot demo program
+-help file "oceans"
+
+Changes since Version 1.3
+-------------------------
+
+-Matlab 4.1 compatability.
+-better coastline database for map (renamed "worldmap" to prevent
+ confusion with the image procesing toolbox).
+-Bug fixes
+
+
+Rich Pawlowicz  - Woods Hole Oceanographic Institution
+rich@boreas.whoi.edu   (508) 540-1400 x3316
+
+
+

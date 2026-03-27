@@ -1,0 +1,420 @@
+%function boxinvert
+% KEY:
+% USAGE :
+% 
+%
+% DESCRIPTION : 
+%
+%
+% INPUT: gKs: rank number to try
+%        p_scale_row_norm (used only with svd)
+%          1: scale the row by their norm + the original column 
+%           weight: W= Rwght^-2 *<row norm>
+%          0: scale by Rwght only
+%
+%        p_scale_col_norm (used  with tapered or svd)
+%          1: scale the col by their norm + the original column 
+%           weight: S= Cwght * sqrt(<col norm>)^-1 
+%           Amatp=normalized matrix
+%          0: scale by Cwght 
+%
+%        p_scale_col_norm (used  with Gauss-Markov)
+%          1: scale the col by their norm + the original column 
+%           weight: S= Cwght^2 * mean(sqrt(<col norm>)) * sqrt(<col norm>)^-1 
+%           Amatp=normalized matrix
+%          0: scale by Cwght only
+%
+%
+% OUTPUT:
+%
+% AUTHOR : A.Ganachaud (ganacho@gulf.mit.edu) , Jul 97
+%
+% SIDE EFFECTS :
+%
+% SEE ALSO : mkequats
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CALLER:
+% CALLEE:
+if ~exist('invmethod')
+  %invmethod='tapered';
+  invmethod='Gauss';
+  %invmethod='svd';
+end
+if ~exist('p_scale_row_norm')
+  p_scale_row_norm=0;
+end
+if ~exist('p_scale_col_norm')
+  p_scale_col_norm=0;
+end
+
+if ~exist('Amat')
+  invid='GM1.0' %INVERSION ID
+  Modelid='NewNatl';
+  IPdir='/data1/ganacho/Boxmod/Natl/';
+  
+  if ~exist('Amat')
+    if 1
+      IPdir='/data1/ganacho/Boxmod/Natl/';
+      boxname='natl_XVII';
+      modelid='New';
+      K=20;
+    end
+    disp(['LOADING ' IPdir boxname '_' modelid '_equn.mat'])
+    eval(['load ' IPdir boxname '_' modelid '_equn.mat'])
+    clear Gunsgn
+  end  
+  disp([  'load ' IPdir Modelid '_equn.mat '])
+  eval([  'load ' IPdir Modelid '_equn.mat '])
+else
+  if ~exist('IPdir')
+    IPdir='./';
+  elseif iscell(IPdir)
+    OPdir=IPdir{1}
+  end
+  if ~exist('Modelid')
+    Modelid=[boxi.name '_' boxi.modelid];
+  end
+  if ~exist('invid')
+    invid='a';
+  end
+end
+if ~exist('p_plots')
+  p_plots=1;
+end
+signstr=sprintf('Model: %s, Inversion: %s   %s',Modelid, invid,date);
+
+nulleq=find(~Rwght);
+Amat(nulleq,:)=[];
+if ~isempty(Gunsgn)
+  Gunsgn(nulleq,:)=[];
+end
+G(nulleq)=[];
+Ekman(nulleq)=[];
+Norm(nulleq)=[];
+Rhs(nulleq)=[];
+Rwght(nulleq)=[];
+pm.eqname(:,nulleq)=[];
+nnullcons=max(find(nulleq<pm.giffrow(1)));
+
+[m,n]=size(Amat);
+
+%NORMALIZE EQUATIONS
+Amat=spdiags(1./Norm,0,m,m)*Amat;
+if ~isempty(find(imag(Amat)))
+  error('Amat has an imaginary part')
+end
+G=G./Norm;
+Ekman=Ekman./Norm;
+Rhs=Rhs./Norm;
+Y=-G-Ekman+Rhs;
+nnt=1./Rwght.^2;
+N = spdiags(nnt,0,m,m);
+R = spdiags(Cwght.^2,0,n,n);
+if any(isnan(Y))
+  error(['NaN found in Y... Check everything '...
+    'see possible zero-width layers'])
+end
+%NORMALIZE THE EQUATIONS
+  if p_scale_row_norm
+    %DO FIRST ROW SCALING THEN COLUMN, SCALE BY ROW NORMS
+    %ROW SCALING
+    disp('Row scaling by row norm...')
+    for irow=1:size(Amat,1)
+      W(irow,irow)=N(irow,irow)*...
+	Amat(irow,:)*Amat(irow,:)';
+    end
+  else
+    W=N;
+  end %if p_scale_row_norm
+  if ~strcmp(invmethod,'Gauss')
+    Amatp=(W'.^0.5)\Amat;
+    Yp=(W.^0.5)'\(Y-Amat*Binit);
+  end
+
+  if p_scale_col_norm
+    %COLUMN SCALING ON THE REF. LEV. VELOC.
+    disp('Column scaling by column norm at the pair')
+    for icol=1:n
+      if 0
+	disp('Total column normalization')
+	Cscaling(icol)=sqrt(1./...
+	  (Amatp(:,icol)'*Amatp(:,icol)));
+      else
+	Cscaling(icol)=sqrt(sqrt(1./...
+	  (Amatp(:,icol)'*Amatp(:,icol))));
+      end
+    end
+    S = spdiags(Cwght.*(Cscaling'.^2),0,n,n);
+    disp('!! Does not use cwght^2 for the scaling !!')
+  else
+    S=R;
+  end %if p_scale_col_norm
+  
+  if ~strcmp(invmethod,'Gauss')
+    Amatp=Amatp*(S'.^0.5);
+    if p_plots
+      %PLOT A MATRIX BEFORE INVERSION
+      f2;clf;subplot(2,1,1);%set(gcf,'position',[35 50 700 900])
+      semilogy(diag(Amatp*Amatp'));grid on;xlabel('diag(Amatp * Amatp t)')
+      title([ Modelid, ' ', invid])
+      subplot(2,1,2)
+      semilogy(sqrt(diag(Amatp'*Amatp)));grid on;title('sqrt(diag(Amatp t * Amatp))')
+      setlargefig;;drawnow
+      signature(signstr)
+    end
+  end
+
+switch invmethod
+  case 'svd'
+  %%%%%%%%%%%%%%%%%%%%%%%%%    SVD    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    disp('SVD')
+    [U,L,V]=svd(full(Amatp));
+    if p_plots
+      figure(7);clf 
+      semilogy(diag(L),'o');grid on;
+      xlabel('singular values');title([ Modelid, ' ', invid])
+    end
+    
+    for K=gKs
+      bxi_svdk
+      ppause
+    end  %for K=gKs
+    
+  case 'tapered'
+  %%%%%%%%%%%%%%%%%%%%%%%%%    TAPERED    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    disp('Tapered')
+    disp('computing bhat...'); tic
+    bhat=Binit+S*Amat'*((Amat*S*Amat'+W)\(Y-Amat*Binit));toc
+    disp('computing Cxx =P assuming <~x>=x...');tic
+    P=   full(S*Amat'*((Amat*S*Amat'+W)\N)*((Amat*S*Amat'+W)\Amat)*S);toc
+    ntilde=Y-Amat*bhat;
+    Pnn=Amat*P*Amat';
+    dn=full(sqrt(diag(Pnn)));
+    %RESOLUTION MATRIX (See p 166) in the Non-dim space
+    if exist('p_resobs')&p_resobs|~exist('p_resobs')
+      %Tu=W'.^.5*Amat*S*Amat'*((Amat*S*Amat'+W)\W'.^-.5);
+     Tu=full(W'.^-.5*Amat*S*Amat'*((Amat*S*Amat'+W)\W'.^.5));
+     %Tv=S'.^.5*Amat'*((Amat*S*Amat'+W)\Amat)*S'.^-.5;
+     Tv=full(S'.^.5*Amat'*((Amat*S*Amat'+W)\Amat)*S'.^.5);
+   end
+   
+    if p_plots
+      ttl=['Tapered ', Modelid, ' ', invid];
+      bxi_plotres(Y-Amat*Binit,ntilde,dn,N,signstr,ttl,pm)
+      bxi_plot_ndbhat(bhat,Binit,R,ttl,signstr,pm)
+      bxi_plt_bhat(bhat,P,pm,gsecs,boxi,ttl,signstr)
+      if exist('p_resobs')&p_resobs|~exist('p_resobs')
+	bxi_plot_resobsmatrix(Tv,Tu,m,n,pm,ttl,signstr)
+      end
+    end %if p_plot
+    
+    if 0
+      %computation of the uncertainty including the null space
+      error('this part is not working yet')
+      K=inv(eye(n)+Amatp'*Amatp);
+      S1=spdiags(Cscaling'.^2,0,n,n);
+      P=full(S)'^.5*K*(inv(S1)+Amatp'*Amatp)*K'*full(S)^.5;
+    end
+    
+  case 'Gauss'
+  %%%%%%%%%%%%%%%%%%%%%%%%% GAUSS-MARKOV %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    disp('Gauss-Markov')
+    if p_scale_row_norm 
+      error('Gauss-Markov does not work if row scaling')
+    end
+    if p_scale_col_norm
+      disp('Gauss-Markov plus p_scale_col_norm probably wrong')
+      ppause
+      avgcollength=mean(Cscaling(1:198).^(-2))
+      %Scales on the stations only !
+      R=spdiags(avgcollength*Cscaling'.^2.*diag(R),0,n,n);
+      error('This part does not work')
+    end
+    if 1
+      %K=R*Amat'*((Amat*R*Amat'+N)\-)
+      %K1=(Amat*R*Amat'+N);
+      disp(sprintf('Condition number: %3.1g',...
+	condest(Amat*R*Amat'+N)))
+      disp('Computing bhat...')
+      %tic;bhat=Binit+R*Amat'*(K1\(Y-Amat*Binit));toc
+      tic;bhat=Binit+R*Amat'*((Amat*R*Amat'+N)\(Y-Amat*Binit));toc
+      disp('Computing P...')
+      %tic;P=full(R-R*Amat'*(K1\Amat)*R);toc
+      if 0 & size(Amat,2)>2000
+	disp('USING MEMORY-SAVING METHOD ...')
+	%SAVE ENVIRONMENT BEFORE CLEARING ALL
+	save boxinvert_tmp1.mat 
+	save boxinvert_tmp2.mat Amat R N gsecs pm
+	ca
+	load boxinvert_tmp2.mat
+	disp('Computing K1 (10sec) ...')
+	tic;K1=full(Amat*R*Amat'+N);toc
+	clear  R N
+	%faster/less memory if full
+	disp('computing P - step 1 (15 min or so) ...')
+	clk=fix(clock);disp(sprintf('started at %ih%i',clk(4:5)))
+	tic;P=K1\Amat;toc
+	save boxinvert_tmp3.mat P
+	clear K1 
+	disp('computing P - step 2 (20 min or so) ...')
+	clk=fix(clock);disp(sprintf('started at %ih%02i',clk(4:5)))
+	tic;P=Amat'*P;toc
+	%P=colblockmult(Amat',P,gsecs,pm);
+        clear Amat gsecs pm;
+	save  boxinvert_tmp5.mat P
+	load  boxinvert_tmp2.mat
+	clear Amat N
+	disp('computing P - step 3 (2 min or so) ...')
+	tic;P=R*P;toc
+	disp('computing P - step 4 (1 min or so) ...')
+	tic;P=P*R;toc
+	disp('computing P - step 5 (1 min or so) ...')
+	tic;P=R-P;toc
+	%P=R-R*Amat'*((Amat*R*Amat'+N)\Amat)*R
+	%LOAD ENVIRONMENT BEFORE CLEARING ALL
+	save  boxinvert_tmp6.mat P
+	load boxinvert_tmp1.mat
+      else
+	tic;P=full(R-R*Amat'*((Amat*R*Amat'+N)\Amat)*R);toc
+      end
+      disp('computing noise 20 (min)...')
+      tic
+      ntilde=Y-Amat*bhat;
+      Pnn1=Amat*P;
+      Pnn=Pnn1*Amat';
+      clear Pnn1
+      dn=full(sqrt(diag(Pnn)));
+      clear Pnn
+      toc
+      save  boxinvert_tmp8.mat ntilde dn 
+      
+      %RESOLUTION MATRIX
+      if exist('p_resobs')&p_resobs|~exist('p_resobs')
+	Tu=N.^-.5*Amat*R*Amat'*inv(Amat*R*Amat'+N)*N.^.5;
+	Tv=R.^.5*Amat'*((Amat*R*Amat'+N)\Amat)*R.^.5;
+      save  boxinvert_tmp9.mat Tu Tv
+      end
+    else %Try Gauss-Markov based on the scaled matrix
+      nn=size(S,1);mm=size(N,1);
+      R=spdiags(ones(nn,1),0,nn,nn);
+      N=spdiags(ones(mm,1),0,mm,mm);
+      K1=Amatp*R*Amatp'+N;
+      condest(K1)
+      bhatp=R*Amatp'*(K1\(Yp));
+      bhat=S'.^.5*bhatp; %same result as previous so far
+      P=full(S'.^.5*(R-R*Amatp'*(K1\Amatp)*R)*S.^.5);
+    end
+
+    %SAVE INVERSION
+    if ~exist('OPdir')
+      OPdir=IPdir;
+    end
+    if ~exist('boxname')
+      boxname=[];
+      modelid=[];
+    end
+    str=['save ' OPdir 'bhat_' Modelid '_' invid '.mat bhat P pm gsecs '...
+	'boxname modelid'];
+    disp(str)
+    eval(str)
+    p_saved=1;
+  
+    if p_plots
+      ttl=['Gauss-Markov ', Modelid, ' ', invid];
+      bxi_plotres(Y-Amat*Binit,ntilde,dn,N,signstr,ttl,pm)
+      
+      %Consistency try:
+      if 0
+	xg=[full(sqrt(diag(R)))*ones(1,100)].*randn(n,100);
+	ng=[full(sqrt(diag(N)))*ones(1,100)].*randn(m,100);
+	yg=Amat*xg+ng;
+	Ryy=N+Amat*R*Amat';
+	dy=full(sqrt(diag(Ryy)));
+      end
+      bxi_plot_ndbhat(bhat,Binit,R,ttl,signstr,pm)
+      bxi_plt_bhat(bhat,P,pm,gsecs,boxi,ttl,signstr)
+      if exist('p_resobs')&p_resobs|~exist('p_resobs')
+	bxi_plot_resobsmatrix(Tv,Tu,m,n,pm,ttl,signstr)
+      end
+      
+      if 0
+	figure(2);clf;set(gcf,'position',[17 50 700 900]);rwnorm=full(sqrt(diag(N)));
+	pl1=plot(yg./(rwnorm*ones(1,100)),(1:length(ntilde))'*ones(1,100),'.');
+	hold on
+	pl2=plot((Y-Amat*Binit)./rwnorm,(1:length(ntilde))'*ones(1,100),'ro');
+	hold on;pl3=plot([-dy./rwnorm dy./rwnorm],(1:length(ntilde))'*ones(1,2),'b-');
+	grid on;legend([pl3(1);pl2(1);pl1(1)],'sqrt(Ryy)','Observed y','Generated');
+	ax=axis;
+	hdl=text(ax(2)*ones(length(ntilde),1),1:length(ntilde),pm.eqname,...
+	  'fontsize',6);
+	setlargefig;signature(signstr)
+      end
+      
+    end %if p_plots
+    
+  otherwise
+    error([invmethod ' unknown method'])
+  end %switch invmethod
+  %Ekman transport recomputation (if used)
+  !rm EkmanT.dry
+  diary EkmanT.dry
+  disp(Modelid)
+  disp(date);disp(datestr(now))
+  bxi_showek
+  diary off
+  
+    if ~exist('OPdir')
+      OPdir=IPdir;
+    end
+    if ~exist('boxname')
+      boxname=[];
+      modelid=[];
+    end
+   if ~exist('p_saved')|~p_saved
+     str=['save ' OPdir 'bhat_' Modelid '_' invid '.mat bhat P pm gsecs '...
+	 'boxname modelid'];
+     disp(str)
+     eval(str)
+   end
+   
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BITS OF OBSOLETE CODE
+if 0 %to scale separately pairs and vertical terms
+  if p_scale_col_norm
+    %COLUMN SCALING ON THE REF. LEV. VELOC.
+    disp('Column scaling by column norm at the pair')
+    for isec=1:length(pm.gifcol);
+      for icol=pm.gifcol(isec):pm.gilcol(isec)
+	Cscaling(icol)=sqrt(sqrt(1./...
+	  (Amatp(:,icol)'*Amatp(:,icol))));
+      end
+    end %for isec
+    %Do not scale the W* terms
+    disp('No column scaling on the W columns')
+    if any(strcmp(fieldnames(boxi),'gifwcol'))
+      gifwcol=pm.gifwcol;
+      gilwcol=pm.gilwcol;
+    else
+      gifwcol=pm.ifwcol;
+      gilwcol=pm.ilwcol;
+    end
+    for ibox=1:length(gifwcol)
+      if 1
+	for icol=gifwcol(ibox):gilwcol
+	  Cscaling(icol)=1*sqrt(sqrt(1./...
+	    (Amatp(:,icol)'*Amatp(:,icol))));
+	end
+      else
+	disp('Remove vertical terms')
+	Cscaling(gifwcol(ibox):gilwcol(ibox))=0;
+      end
+    end
+    S = spdiags((Cwght.*Cscaling').^2,0,n,n);
+    %S = spdiags(Cwght.*(Cscaling'.^2),0,n,n);
+    %disp('!! Does not use cwght^2 for the scaling !!')
+  else
+    S=R;
+  end %if p_scale_col_norm
+end %if 0

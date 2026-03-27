@@ -1,0 +1,40 @@
+###
+###		 DJ subroutine library gamma.a
+###
+
+FC = /home2/planier/services/PGI/linux86/bin/pgf90
+OBJ = atg.o \
+	  depth-ns.o \
+	  depth-scv.o \
+	  derthe.o \
+	  eosall.o \
+	  eos8d.o \
+	  e-solve.o \
+	  gamma-errors.o \
+	  gamma-n.o \
+	  goor.o \
+	  gamma-qdr.o \
+	  get-lunit.o \
+	  goor-solve.o \
+	  index.o \
+	  neutral-surfaces-linux.o \
+	  ocean-test.o \
+	  scv-solve.o \
+	  sig-vals.o \
+	  stp-interp.o \
+	  svan.o \
+	  theta.o \
+	  read-nc.o
+
+
+
+
+FFLAGS = -DPWD="'`pwd`'" -Mextend -fast -O4
+ 
+
+################################################################################
+ 
+
+gamma.a: $(OBJ)
+	 ar -rv gamma.a *.o
+	 rm -f *.o

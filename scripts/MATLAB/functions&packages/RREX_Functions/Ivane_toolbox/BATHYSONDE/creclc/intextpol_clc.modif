@@ -1,0 +1,121 @@
+
+function [messext, messint, tabint,tabflagint] = intextpol_clc (tabval,tabflag, fiderr, ficuni)
+ 
+% --------------------------------------------
+%
+% extrapolation surface - interpolation milieu 
+%
+% --------------------------------------------
+
+globalVarEtiquni;
+globalVarDef;
+globalRepDef;
+
+messint = '';
+messext = '';
+      
+ifin = find(P_INT==tabval(1,ETIQ.nval));
+if  isempty(ifin) 
+         ifin = length(P_INT);
+end
+
+
+
+tabint     = zeros (ETIQ.nparp-1,ifin);
+tabflagint = zeros(ETIQ.nparp-1,ifin);
+
+
+% recherche trou max en surface
+% -----------------------------
+idebt = find(isfinite(tabval(1,1:ETIQ.nval)))
+ideb = idebt(1)
+difft = tabval(1,ideb) - P_INT(1)
+
+ if  difft > TROUSURF_DEF
+       messext = sprintf('%s%s%d%s%d',ficuni,' : Amplitude du trou en surface superieure a ',TROUSURF_DEF,'- 1ere valeur du fichier : ',tabval(1,1));
+       fprintf(fiderr,'\n%s',messext);
+       
+ end
+
+% recherche de l'indice de debut dans P_INT
+% -----------------------------------------
+
+if (isempty(messext))
+     i = 1;
+     tabinterm = zeros(ETIQ.nparp-1,difft)
+     while P_INT(i) < tabval(1,1)
+
+% complementation : moyenne des n valeurs(correspondant 
+% a  la hauteur+1) : cette valeur est completee jusqu'a  la 
+% 1ere valeur de la grille
+
+          for ind_par = 2:ETIQ.nparp
+            u=1;
+            while u <= HAUTSURF_DEF+1
+               pp(u)=tabval(ind_par,u);
+               u= u+1;
+            end
+            tabinterm(ind_par-1,i) = mean(pp);
+          end
+          i = i + 1;
+     end
+     ideb = i;
+end
+
+
+
+% recherche trou max au milieu
+% ----------------------------
+
+   
+ trou    = []; 
+ troumax = []; 
+ 
+ trou    = diff(tabval(1,:));
+ 
+ troumax = find(trou > TROUMIL_DEF);
+
+ if (~isempty(troumax))
+         messint = sprintf('%s%s%d',ficuni,' : Amplitude maximum du trou (en pression) superieure a ',TROUMIL_DEF); 
+         fprintf(fiderr,'\n%s',messint);
+ end;
+
+
+% interpolation et extrapolation si valeurs des trous < trous max demandes
+% par l'utilisateur
+% ------------------------------------------------------------------------
+
+ if  (isempty(messint) && isempty(messext))
+
+   if MODINT_DEF(1:1) == 'L'
+      modint = 'linear';
+    else
+      modint = 'spline';
+   end
+  
+   for l = 1:ETIQ.nparp-1
+        isok=find(isfinite(tabval(l+1,:)));
+        if isok>0
+           tabint(l,ideb:ifin) = interp1 (tabval(1,isok), tabval(l+1,isok), P_INT(ideb:ifin),modint);
+whos tabint tabinterm
+           tabint(l,1:ideb-1)  = tabinterm(l,:);
+        
+% recherche des pressions existantes dans le fichier cli 
+           iextra = ismember(P_INT,tabval(1,:));
+           iexist = find(iextra==1);
+
+% recherche des pressions manquantes dans le fichier cli        
+          
+           iinterpol = find(iextra==0);
+        
+           tabflagint(l,iinterpol) = 8;
+           tabflagint(l,iexist)    = tabflag(l+1,:);
+        else
+           tabint(l,1:ifin)     = NaN;
+           tabflagint(l,1:ifin) = 9;
+        end
+
+   end;
+ end;
+
+clear u tabinterm tabval modint; 

@@ -1,0 +1,340 @@
+%function mk_set_layprops
+% KEY:   set layer integrated properties
+% USAGE :
+% 
+%
+%
+%
+% DESCRIPTION : 
+%
+%
+% INPUT: see variable defined in mkequats 
+%        p_lcdref : default=1: takes reference level at last
+%                   common depth (deepest station if zero)
+%
+% OUTPUT:
+%
+% AUTHOR : A.Ganachaud (ganacho@gulf.mit.edu) , Jul 97
+%
+% SIDE EFFECTS :
+%
+% SEE ALSO :
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CALLER: mkequats
+% CALLEE:
+if ~exist('p_lcdref')
+  p_lcdref=1;
+end
+
+lisumprop =zeros(Nlay,Nconseq); %cumulative sum of layer properties
+lisumprop2=zeros(Nlay,Nconseq);
+lsumprop  =zeros(Nlay,Nconseq);
+lsumprop2 =zeros(Nlay,Nconseq);
+lisumdCdz  =zeros(Nlay-2,Nconseq);
+lsumverarea=zeros(Nlay,1);
+lsumverarea2=zeros(Nlay,1);
+lisumlength=zeros(Nlay,1);
+
+for isb=1:Nsec
+  %GET SECTION PAIR DATA
+  secid=[gsecs.name{isb} gsecs.namesuf{isb}];
+  datadir=gsecs.datadir{isb};
+  getpdat
+  if gsecs.npair(isb)~=Npair
+    error('wrong parameter gsecs.npair')
+  end
+  
+  if any(strcmp(fieldnames(boxi),'glevels')) %NEUTRAL SURFACE
+    if length(boxi.glevels)~=boxi.nlay
+      error('length(boxi.glevels)~=boxi.nlay')
+    end
+    if ~exist('gamn') | (length(gamn) < isb)
+      namegfile=[OPdir boxi.name '_' boxi.modelid '_gamn.mat'];
+      if exist(namegfile)
+	eval(['load ' namegfile])
+	disp(['loading GAMMA file: ' namegfile])
+	if length(gamn) < isb
+	  tosave=1;
+	else
+	  tosave=0;
+	end 
+      else
+	tosave=1;
+      end %if exist(namegfile)
+    end
+    if tosave
+      disp('COMPUTING NEUTRAL DENSITY (takes a few minutes) ...')
+      tic;[pgamn,dgl,dgh] = gamman(psali,ptemp,Presctd,Plon,Plat);toc
+      disp('DONE')
+      %REMOVE STATIC INSTABILITY
+      [gamn{isb},gamnlog{isb}]=rem_instab(pgamn);
+    end
+    %FIND DEPTHS OF THE INTERFACES
+    lipres{isb}=getsigpres(Presctd,Pbotp,Maxdp(:,Itemp),gamn{isb},boxi.glevels);
+    %lipres(ip,il) contains the interface il depth (dB), pair ip
+  elseif any(strcmp(fieldnames(boxi),'sigint'))
+    if length(boxi.sigint)~=boxi.nlay
+      error('length(boxi.sigint)~=boxi.nlay')
+    end
+    lipres{isb}=find_sig_interface(boxi.sigint,boxi.sigipref,boxi.pref,...
+      ptemp,psali,Presctd,Maxdp(:,Itemp),Pbotp,gsecs);
+    tosave=0;
+  else
+    error('interfaces not defined')
+  end
+  if exist('p_plt_interface') & p_plt_interface
+    mk_plt_interface(lipres,Slat,Slon,Presctd,Botp,gsecs,boxi,isb);
+  end
+  if exist('p_plotallgamma') & p_plotallgamma & exist('gamn')
+    figure;cinterv=[23:.5:27,27:.1:28,28:.01:30];
+    [c,h]=contour(cumsum(sw_dist(Slat,Slon,'km')),-Presctd,gamn{isb},cinterv);
+    clabel(c,h);title(gsecs.name{isb});set(gca,'ylim',[-500*ceil(max(Botp)/500) 0]);
+    hold on;plot(cumsum(sw_dist(Slat,Slon,'km')),-Pbotp);land;setlargefig
+    if input('print ? (y/n) ','s')=='y',pg,end
+  end
+ 
+  %CONVERT PRESSURE->DEPTH
+  Ndep{isb}=length(Presctd);
+  Dep{isb}   =sw_dpth(Presctd(:,1)*ones(1,Npair),ones(Ndep{isb},1)*(Plat'));
+
+  lidep{isb}=sw_dpth(lipres{isb},Plat*ones(1,Nlay));
+  Botdep{isb}=sw_dpth(Botp,Slat);
+  %CORRECT POSSIBLE LAYERS BELOW BOTTOM DUE TO NON LINEAR EFFECTS
+  Pbotd=max([Botdep{isb}(1:Npair)';Botdep{isb}(2:Npair+1)'])';
+  allpbot=Pbotd*ones(1,Nlay);
+  gitocorrect=find(lidep{isb} > allpbot);
+  deltad=lidep{isb}(gitocorrect)-allpbot(gitocorrect);
+  if any(deltad>1)
+    error('TOO LARGE CORRECTION TO LAYER BOTTOM DEPTHS')
+  end
+  lidep{isb}(gitocorrect)=allpbot(gitocorrect);
+  Sdist{isb}=sw_dist(Slat,Slon,'km');
+
+  
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % REFERENCE THE VELOCITY
+  %GET REFERENCE LEVEL
+  if (~isempty(gsecs.rl.ns))&(~isempty(gsecs.rl.ns(isb)))
+    disp(sprintf('  Referencing velocities to interface %i (%f)',...
+      gsecs.rl.ns(isb),boxi.glevels(gsecs.rl.ns(isb))))
+    rlpres{isb}=lipres{isb}(:,gsecs.rl.ns(isb));
+    %clf;plot(-rlpres{isb});ppause
+  elseif (~isempty(gsecs.rl.nsid))&(~isempty(gsecs.rl.nsid(isb)))...
+      &(gsecs.rl.nsid(isb)>0)
+    disp(sprintf('  Referencing velocities to gamma surface %g',gsecs.rl.nsid(isb)))
+    %Reference to the given sigma interface
+    if ~exist('gamn') 
+      error('gamn has not been loaded or computed yet')
+    end
+    rlpres{isb}=getsigpres(Presctd,Pbotp,Maxdp(:,Itemp),...
+      gamn{isb},gsecs.rl.nsid(isb));
+    %disp(rlpres{isb})
+  elseif length(gsecs.rl.pres{isb})==1
+    disp(sprintf('  Referencing velocities to %i db',gsecs.rl.pres{isb}))
+    rlpres{isb}=gsecs.rl.pres{isb}*ones(Npair,1);
+  else
+    disp('  Referencing velocities specified pressures')
+    rlpres{isb}=gsecs.rl.pres{isb};
+  end
+  % SETS THE REFERENCE LEVEL TO THE LAST COMMON DEPTH IF IT WAS 
+  % UNDERNEATH
+  ishdp = [1:Nstat-1; 2:Nstat];isw = find( diff(Botp) < 0 ); 
+  ishdp([1 2],isw) = ishdp([2 1],isw);
+  if p_lcdref
+    limitdep=Botp(ishdp(1,:));
+  else
+    disp('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+    disp('REFERENCING TO DEEPEST DEPTH !')
+    disp('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+    limitdep=Botp(ishdp(2,:));
+  end
+  gis_at_bot=find(rlpres{isb}>limitdep);
+  rlpres{isb}(gis_at_bot)=limitdep(gis_at_bot);
+  % R.L.VELOCITY
+  rlgv= getsigprop(Presctd,gvel,Pbotp,rlpres{isb});
+  % RELATIVE VELOCITY IN CM/S
+  grelvel{isb}=0.01*(gvel-ones(Ndep{isb},1)*(rlgv')); %in m/s
+  clear ishdp limitdep gis_at_bot 
+  if exist('p_plt_refvel')&p_plt_refvel
+    figure;
+    plt_prop(100*grelvel{isb}, 'vel', 'cm/s', Cruise, Presctd, ...
+      Maxd(:,1), Botp, Slat, Slon,500*ceil(max(Botp)/500))
+    land;setlargefig;printyn
+  end
+  %plot_vel(cumsum(Sdist{isb}),-Pres,100*grelvel{isb});
+  %ppause
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % INTEGRATIONS IN LAYERS
+  %GET AREA IN EACH CELL
+  larea{isb}=integlay(lidep{isb},ones(Npair,Nlay),Dep{isb},ones(Ndep{isb},Npair),...
+    Sdist{isb},Botdep{isb});
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % INTEGRATION OF DENSITY
+  prhoi = sw_dens(psali,ptemp,Presctd);
+  lirhoi=getsigprop(Presctd,prhoi,Pbotp,lipres{isb});
+  lrhoi =integlay(lidep{isb},lirhoi,Dep{isb},prhoi,Sdist{isb},Botdep{isb});
+  lrhoi2=integlay(lidep{isb},lirhoi.^2,Dep{isb},prhoi.^2,Sdist{isb},Botdep{isb});
+  lscale(MASS)=1e9;
+  lunits{MASS}='10^9 kg/s';
+  lprop{isb,MASS} =lrhoi/lscale(MASS)/100; %b is in cm/s
+  % TRANSPORT
+  ligvrhoi=getsigprop(Presctd,prhoi.*grelvel{isb},Pbotp,lipres{isb});
+  lgvrhoi=integlay(lidep{isb},ligvrhoi,Dep{isb},prhoi.*grelvel{isb},...
+    Sdist{isb},Botdep{isb});
+  lgvprop{isb,MASS} =lgvrhoi/lscale(MASS);
+  
+  % LAYER PROPERTIES (LAYBOUND)
+  [laybs,lays]=laybound(Slat,Slon,lidep{isb},larea{isb},lirhoi,lrhoi,lrhoi2);
+  Laybs{isb,MASS}=laybs;
+  Lays{isb,MASS}=lays;
+  % ADD INTEGRALS TO GET MEAN/STD OVER THE BOX
+  lsumprop(:,MASS)=lsumprop(:,MASS)+lays.lsumprop';
+  lsumprop2(:,MASS)=lsumprop2(:,MASS)+lays.lsumprop2';
+  lisumprop(:,MASS)=lisumprop(:,MASS)+laybs.lisumprop';
+  lisumprop2(:,MASS)=lisumprop2(:,MASS)+laybs.lisumprop2';
+  lisumdCdz(:,MASS)=lisumdCdz(:,MASS)+laybs.lisumdCdz;
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % INTEGRATION OF HEAT
+  %GET CP ACCORDING TO BACON(1996)
+  pottemp=sw_ptmp(psali,ptemp,Presctd,0);
+  phtcp=sw_cp(psali,pottemp,0);
+  pheat=prhoi.*phtcp.*pottemp;
+  liheat=getsigprop(Presctd,pheat,Pbotp,lipres{isb});
+  lheat=integlay(lidep{isb},liheat,Dep{isb},pheat,Sdist{isb},Botdep{isb});
+  lheat2=integlay(lidep{isb},liheat.^2,Dep{isb},pheat.^2,Sdist{isb},Botdep{isb});
+  lscale(HEAT)=1e15;
+  lunits{HEAT}='PW';
+  lprop{isb,HEAT}=lheat/lscale(HEAT)/100;
+  % HEAT TRANSPORT
+  ligvheat=getsigprop(Presctd,pheat.*grelvel{isb},Pbotp,lipres{isb});
+  lgvheat=integlay(lidep{isb},ligvheat,Dep{isb},pheat.*grelvel{isb},...
+    Sdist{isb},Botdep{isb});
+  lgvprop{isb,HEAT}=lgvheat/lscale(HEAT);
+  % LAYER PROPERTIES (LAYBOUND)
+  [laybs,lays]=laybound(Slat,Slon,lidep{isb},larea{isb},liheat,lheat,lheat2);
+  Lays{isb,HEAT}=lays;
+  Laybs{isb,HEAT}=laybs;
+  % ADD INTEGRALS TO GET MEAN/STD OVER THE BOX
+  lsumprop(:,HEAT)=lsumprop(:,HEAT)+lays.lsumprop';
+  lsumprop2(:,HEAT)=lsumprop2(:,HEAT)+lays.lsumprop2';
+  lisumprop(:,HEAT)=lisumprop(:,HEAT)+laybs.lisumprop';
+  lisumprop2(:,HEAT)=lisumprop2(:,HEAT)+laybs.lisumprop2';
+  lisumdCdz(:,HEAT)=lisumdCdz(:,HEAT)+laybs.lisumdCdz;
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % INTEGRATION OF OTHER PROPERTIES
+  %for iprop=SALI:Nconseq
+  for iprop=boxi.conseq.propid(SALI:Nconseq)
+    disp(['INTEGRATING ' propnm{iprop}])
+    switch iprop
+      case{SALI}
+        eval(['pprop=prhoi.*p' propnm{iprop} ';'])
+	lscale(SALI)=1000*1e6; %g/s ->10^6 kg/s 
+        lunits{SALI}='10^6 kg/s';
+      case{PHOS,SILI,NITA}
+        eval(['pprop=prhoi.*p' propnm{iprop} ';'])
+	lscale(iprop)=1e9; %umol/s -> kmol/s 
+	lunits{iprop}='kmol/s';
+      case OXYG
+         if all(poxyg(find(~isnan(poxyg)))<100)
+	  disp('Oxygen conversion ml/l to umol/kg (Pickard & Emery, 1990)')
+	  poxygumolkg=44.69*prhoi.*poxyg/1000;
+	  pprop=prhoi.*poxygumolkg;
+	else
+	  poxygumolkg=poxyg;
+	end
+	  pprop=prhoi.*poxygumolkg;
+	  lscale(iprop)=1e9; %umol/s -> kmol/s 
+	lunits{iprop}='kmol/s';
+      case PO38
+	pprop=prhoi.*(138*pphos+poxygumolkg);
+	lscale(iprop)=1e9; %umol/s -> kmol/s 
+	lunits{iprop}='kmol/s';
+	%plt_prop(pprop./prhoi, propnm{iprop}, 'umol/kg', ...
+	%  Cruise, Pres, Maxd, Botp, Slat, Slon);
+      otherwise
+        error('not programmed')
+    end %switch
+    liprop_=getsigprop(Presctd,pprop,Pbotp,lipres{isb});
+    lprop_=integlay(lidep{isb},liprop_,Dep{isb},pprop,Sdist{isb},Botdep{isb});
+    lprop2=integlay(lidep{isb},liprop_.^2,Dep{isb},pprop.^2,Sdist{isb},Botdep{isb});
+    lprop{isb,iprop} =lprop_/lscale(iprop)/100;
+    % TRANSPORT
+    ligvprop=getsigprop(Presctd,pprop.*grelvel{isb},Pbotp,lipres{isb});
+    lgvprop_=integlay(lidep{isb},ligvprop,Dep{isb},pprop.*grelvel{isb},...
+      Sdist{isb},Botdep{isb});
+    lgvprop{isb,iprop} =lgvprop_/lscale(iprop);
+    
+    % LAYER PROPERTIES (LAYBOUND)
+    [laybs,lays]=laybound(Slat,Slon,lidep{isb},larea{isb},liprop_,lprop_,lprop2);
+    Lays{isb,iprop}=lays;
+    Laybs{isb,iprop}=laybs;
+    % ADD INTEGRALS TO GET MEAN/STD OVER THE BOX
+    lsumprop(:,iprop)=lsumprop(:,iprop)+lays.lsumprop';
+    lsumprop2(:,iprop)=lsumprop2(:,iprop)+lays.lsumprop2';
+    lisumprop(:,iprop)=lisumprop(:,iprop)+laybs.lisumprop';
+    lisumprop2(:,iprop)=lisumprop2(:,iprop)+laybs.lisumprop2';
+    lisumdCdz(:,iprop)=lisumdCdz(:,iprop)+laybs.lisumdCdz;
+  end %iprop
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %TOTAL INTERFACE LENGTH / LAYER AREA
+  lisumlength=lisumlength+laybs.litotdist';
+  lsumverarea=lsumverarea+lays.lverarea';
+  %TOTAL AREA FOR LAYER (FOR AVG WIDTH COMPUTATION)
+  lsumverarea2(1:Nlay-1)=lsumverarea2(1:Nlay-1)+...
+    sum(1000*(Sdist{isb}*ones(1,Nlay-1)).*...
+    (lidep{isb}(:,2:Nlay)-lidep{isb}(:,1:Nlay-1)))';
+  lsumverarea2(Nlay)=lsumverarea2(Nlay)+sum(1000*Sdist{isb}.*...
+    (lidep{isb}(:,Nlay)-lidep{isb}(:,1)));
+end %on isb
+
+if tosave
+  disp(['SAVING GAMN : ' namegfile])
+  eval(['save ' namegfile ' gamn'])
+  clear gamn
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% COMPUTES BOX AVERAGE LAYER PROPERTIES units: (rho*property)
+boxi.lavg=lsumprop./(lsumverarea*ones(1,Nconseq));
+boxi.lstd=sqrt(lsumprop2./(lsumverarea*ones(1,Nconseq))-boxi.lavg.^2);
+boxi.lrms=sqrt(lsumprop2./(lsumverarea*ones(1,Nconseq)));
+boxi.liavg=lisumprop./(lisumlength*ones(1,Nconseq));
+boxi.listd=sqrt(lisumprop2./(lisumlength*ones(1,Nconseq))-boxi.liavg.^2);
+boxi.lirms=sqrt(lisumprop2./(lisumlength*ones(1,Nconseq)));
+boxi.lavgwdth=lsumverarea2./([lisumlength(2:Nlay);lisumlength(1)]);
+boxi.lverarea=lsumverarea;
+boxi.liavgdCdz=lisumdCdz./(lisumlength(2:Nlay-1)*ones(1,Nconseq));
+
+% DISPLAY BOX AVERAGED PROPERTIES
+disp_layavg(boxi,propnm,Propunits)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% COMPUTES LAYER INTERFACE AREA APPROXIMATING WITH TRAPEZE
+if length(boxi.harea)==1
+  if boxi.zonalcoast & boxi.zonalcoast<=1000
+    disp('Warning: Zonal coast in m ?')
+    ppause
+  end
+  ydist=2*boxi.harea(1)/(lisumlength(1)+boxi.zonalcoast);
+  boxi.harea(2:Nlay)=ydist*(boxi.zonalcoast+lisumlength(2:Nlay))/2;
+end
+
+%Clear variables from loop
+clear pgamn dgh dgl liprop_ lprop_ lprop2 ligvprop lgvprop_ laybs lays
+clear lsumprop lsumprop2 lisumprop lisumprop2
+clear poxygumolkg pottemp phtcp pheat liheat lheat lheat2 ligvheat lgvheat 
+clear prhoi lirhoi lrhoi2 ligvrhoi lgvrhoi
+clear gis_at_bot ishdp isw
+%Clear section data
+clear ptemp psali poxyg pphos psili pdynh gvel svel pprop
+clear Slon Slat Botp Cast Cruise Gis_select IPhdr Secdate
+clear Idynh Ioxyg Iphos Isali Isctd Isili Itemp
+clear Kt MPres Maxd Maxdp Nobs Nstat Pairfiles Pbotp Plat Plon Precision
+clear Pres Presctd Propnm Propunits Ptreat Remarks Secname Ship
+clear Treatment Vcont Velfile Velprec Velunit Xdep hdrname

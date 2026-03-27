@@ -1,0 +1,17 @@
+PROGRAM = example
+
+FFLAGS = -native -O4 -cg89
+
+.KEEP_STATE:
+
+.PRECIOUS :
+
+LIBS       =  gamma.a -lnetcdf
+
+all: $(PROGRAM)
+
+$(PROGRAM) : $$@.o
+	$(LINK.f) -o $@ $@.o $(LIBS)
+
+clean :
+	rm -f *% core $@

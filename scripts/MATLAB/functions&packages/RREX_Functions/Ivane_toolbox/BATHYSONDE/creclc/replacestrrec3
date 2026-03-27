@@ -1,0 +1,9 @@
+#! /bin/sh
+# filename: replacestrrec
+grep -lr 'f_creer_newvar2' */* | while read i
+do
+  echo $i
+  cp $i $i.bak &&
+  sed 's|f_creer_newvar2|creat_newvar|g' $i.bak > $i 
+  rm -f $i.bak
+done

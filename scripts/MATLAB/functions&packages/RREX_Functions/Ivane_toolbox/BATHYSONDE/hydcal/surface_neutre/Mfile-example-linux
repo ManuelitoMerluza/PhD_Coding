@@ -1,0 +1,2 @@
+pgf90 -c  example.f -o example.o
+pgf90 example.o gamma.a /home/porzig/services/netcdf/netcdf-3.5.0/lib/libnetcdf.a -o example

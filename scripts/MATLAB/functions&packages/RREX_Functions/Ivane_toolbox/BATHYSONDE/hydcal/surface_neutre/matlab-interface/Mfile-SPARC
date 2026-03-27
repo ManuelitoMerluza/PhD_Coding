@@ -1,0 +1,17 @@
+PROGRAM = glabel_matlab nsfces_matlab
+
+FFLAGS = -fast -O4 -cg89
+
+.KEEP_STATE:
+
+.PRECIOUS :
+
+LIBS       =  ../gamma.a ../libnetcdf.a
+
+all: $(PROGRAM)
+
+$(PROGRAM) : $$@.o
+	$(LINK.f) -o $@ $@.o $(LIBS)
+
+clean :
+	rm -f *% core $@

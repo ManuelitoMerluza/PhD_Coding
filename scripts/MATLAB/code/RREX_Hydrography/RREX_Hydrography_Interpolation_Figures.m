@@ -137,8 +137,7 @@ for h = axhandles
     j=j+1;
 end
 
-set(gca, 'LooseInset', get(gca, 'TightInset'));
-% exportgraphics(gcf,'15.MeridionalTransectDifference.png')
+
 
 %% Zonal Transects
 

@@ -1,0 +1,4 @@
+gfortran -ffixed-line-length-none -c -o glabel_matlab.o glabel_matlab.f
+gfortran glabel_matlab.o ../gamma.a ./libnetcdf.a -o glabel_matlab
+gfortran -ffixed-line-length-none -c -o nsfces_matlab-linux.o nsfces_matlab-linux.f
+gfortran nsfces_matlab-linux.o ../gamma.a ./libnetcdf.a -o nsfces_matlab

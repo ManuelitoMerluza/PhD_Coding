@@ -1,0 +1,776 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% function geovel
+% KEY: calculates the geostrophic velocities
+%
+% AUTHOR : A.Ganachaud (ganacho@gulf.mit.edu) , Oct 95
+%
+% UPDATES: Jan 96, D. Spiegel
+%  Cosmetic changes to alphabetize variable comments and space command lines
+%  Started diary earlier to include more information
+%  NOT ANY MORE Default method is set to cstslope if 'method' has not yet been defined
+%  Set slopmax=1 which is passed to g_botwedge from g_pairset for cstslope case
+%  Read T and S if dynh must be calculated ie isnan(Idynh) or 
+%  if dynh_option ie we calc dynh from T and S in bot triangle
+%     to recover the results from geovel.f
+%  Calculate and use Maxdp = Maxd(ishdp(2,:),:);
+%  Provide parameter p_plots to make plots of choose stat, topog and gvel optional:
+%     if p_plots        
+%  Distinguished between pressure for ctd and non ctd data:
+%     if Isctd(Itemp)   pres = Presctd; else  pres = Pres; end
+%  Renamed shald to sdynh, deepd to ddynh for consistency with pdynh
+%  Altered call of wyhdro to include OPdir and use Maxdp not Maxd
+%  Replaced g_pltvel by more general plot_pprop (which used both Maxd and Maxdp)
+%  Add Maxdp to variables saved in .mat file
+%
+% PROBLEMS : the sign convention has to be checked
+%
+% DESCRIPTION : 
+%  For each pair of station the values are extrapolated,
+%    when bottom depth is different, by fitting a plane.
+%  The geostrophic velocities are then computed (ref level at the surface)
+%  Bottom wedge: the treatment can be made interactively
+%    default: specified by parameter defaulttreat
+%      then, for the suspicious pairs, alternative treatments:
+%          1-plane fit
+%          2-constant velocity under Last Common Depth
+% 	   -manually set           <not available>
+%          -const. slope under LCD <not available>
+%          -set to zero            <not available>
+%
+% MAJOR PARAMETERS:
+%     IPdir IPhdr          : input  directory, header file name
+%     OPdir OPhdr          : output directory, header file name
+%     Gis2do               : vector specifying stations in subsection
+%     p_plots = 0          : plotting parameter: =0 quick run, !=0 do the graphics
+%     p_pos2left           : velocity sign convention: =1 positive sign
+%     defaulttreat         : default bottom wedge treatment
+%     Ptreat(Npair)        : OPTIONAL, if provided, pairs are treated using the
+%                            specified treatment. If not, uses defaulttreat and
+%                            prompt the user if pair is suspicious
+%     P2plot(Npair)        : if Ptreat is precised, one can for prompt on
+%                             suspicious pairs. then P2plot(ipair)=1
+%
+%     slopmx               : maximum slope for cstslope method (default is 1)
+%     dynh_option (0/1)    : recovers the geovel.f results by computing T
+%                            and S and matching dynamic heights at the bottom
+%                            No prompt on suspicious pairs in this case.
+%
+%INPUT FILES (if variables are not in memory)
+%  station data for a section or "cruise"
+%  <sec>_SM_hdr.mat              : header file for the station data for the section 
+%  <sec>_SM_<prop>.fbin          : station data files for the section 
+%    for <prop> = dynh (if ctd) temp, sali, oxyg, phos, sili, etc.
+%    i.e. station data which has been treated, interp at standard depths,
+%    bottle and ctd merged, formatted by mk_hydrofile.m 
+%    into binary (.fbin) files readable by Matlab.
+%
+% OUTPUT FILES                   : pair data for subsection of (or entire) input section 
+%  <sec>_PG_<subsec>_hdr.mat     : header file for pair data for subsection
+%  <sec>_PG_<subsec>_<prop>.fbin : pair data files for subsection 
+%    for <prop> = dynh (if ctd) temp, sali, oxyg, phos, sili, etc.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% INPUT STATION HEADER FILE VARIABLES:
+%     Botp         (Nstat) : bottom pressure
+%     Cast         (Nstat) : original station indice, before mergech
+%     Cruise               : name of the cruise
+%     Isctd        (Nprop) : 1 if this data is on the ctd Pressure intervals
+%     Itemp,Isali,Idynh,   : integer, index of each property, NaN if not avail
+%     Kt           (Nstat) : record number (not useful at the moment)
+%     MPres        (Nprop) : # of "standard" depth
+%     Maxd   (Nstat,Nprop) : index of deepest measurement
+%     Nobs         (Nstat) : # of observations  
+%     Nprop                : # of properties available (temp, sali, ...)
+%     Nstat                : # of stations
+%     Precision            : format for the binary files (cf mk_hydrofile.m)
+%     Pres   (MPres(iprop)): depth (db)
+%     Presctd(MPres(iprop)): depth (db) for ctd data
+%     Statfiles            : names of the binary files (.fbin) containing property values
+%     Propnm               : name of each property
+%     Propunits            : units -
+%     Remarks              : -
+%     Secdate              : date of the section
+%     Ship         (Nstat) : ship Id 
+%     Slat Slon    (Nstat) : locations
+%     Treatment            : done on the data
+%     Xdep         (Nstat) : depths to the deepest measurement for each station
+%
+% OUTPUT PAIR HEADER FILE VARIABLES (all of the above plus the following):
+%     Gis_select           : indice of the station selected from the input
+%     Cast , ...           : corresponding original station number
+%     Maxdp                : Max depth for the deeper station of the pair
+%     Npair                : # of pairs
+%     Pairfiles            : names of the binary files (.fbin) containing property values
+%     Pbotp        (Npair) : depth (db) at this pair (deepest station depth)
+%     Plat Plon    (Npair) : pair latitudes, longitudes     
+%     Ptreat               : treatment done at this pair
+%     Secname              : subsection name 
+%     Velfile              : name of binary file containing velocities (ref. to surface)
+%     Velprec              : precision (to read Velfile)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% UPDATE 
+%   Jan 97, A. Ganachaud 
+%    MODIF of ishdp Jan 97: Pres(Maxd(:,Itemp)) became Botp
+%   Feb 97, A. Ganachaud 
+%    change the default method system  
+%    change the output file names (do not include prefix + Secname)     
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SEE ALSO :
+% CALLER: general purpose
+% CALLEE: check_val, g_botwedge, g_pairset, g_hotpair, g_pltopo, rhydro, 
+%  <sw_ library>
+%         
+%%%%%%%%%%%%%%%%%%%%%%%%%
+% LIBRARIES
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%path(path,'/data4/ganacho/ML/ROUTINES');
+if ~exist('p_plt_topo')
+  p_plt_topo=p_plots
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+% GLOBAL VARIABLES
+%%%%%%%%%%%%%%%%%%%%%%%%%
+global MENU_VARIABLE; %for the menus
+if ~exist('Slon')
+  global Slat Slon
+end
+
+if ~exist('p_load')
+  p_load=exist('IPdir');
+end
+if ~exist('p_saveOP')
+  p_saveOP=1;
+end
+  
+if p_load
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %LOAD THE DATA ( cf comments re INPUT STATION HEADER FILE )
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  eval(['load ' IPdir  IPhdr])
+  
+  %OUTPUT HEADER FILE
+  OPhdr = [prefix '.hdr.mat'];
+  Treatment = ['geovel.m run on ' IPhdr ' ' date ];
+  oo = ones(Nprop,1);
+  Pairfiles = [ setstr(oo*[prefix '_']), Propnm(1:Nprop,:), setstr(oo*['.fbin']) ];
+  Velfile = [prefix '_gvel.fbin'];
+  Velprec = 'float32';
+  Velunit = 'cm/s';
+end
+
+if p_saveOP
+  %%%%%%%%%%%%%%%%%%%%%%%%%
+  %START DIARY
+  %%%%%%%%%%%%%%%%%%%%%%%%%
+  ovw = diarystart([OPdir OPhdr],ovwd); 
+  %ovwd = "overwrite" previous version
+  
+  disp(['Input data from the directory :'])
+  disp( IPdir )
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+% PARAMETER SPECIFICATION 
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%DISPLAY DYNH OPTION
+  if ~exist('dynh_option')
+    dynh_option=0;
+  end
+  if dynh_option
+    disp(sprintf('Using dynamic height option: %d',dynh_option))
+  end
+
+%SET DEFAULT METHOD FOR BOTTOM WEDGE
+  if ~exist('defaulttreat')
+    defaulttreat=1;
+  end
+  if defaulttreat==1
+    method='pfit';
+  elseif defaulttreat==2
+    method='cstvel';
+  elseif defaulttreat==3
+    error('not available')
+  elseif defaulttreat==4
+    method='cstslope';
+    if (~dynh_option) 
+      error('dynh_option should be set to one to get geovel.f results')
+    end
+  elseif defaulttreat==5
+    method='polyfit';
+  else
+    error('default method not available')
+  end    
+  if dynh_option & defaulttreat~=4
+    error('dynh_option must be used with cst slope only')
+  end
+  disp(sprintf('Using method: %s by default',upper(method)))
+  
+%SET SLOPMX
+  if ~exist('slopmx')
+    slopmx = 1.0;
+  end
+  disp(sprintf('Using maximum slope: %5.1f',slopmx))
+  disp(' ');disp(' ');disp(' ');disp(' ');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%REMOVE DISCONTINUITIES IN LONGITUDE (-180 to 181 or 360 to 1)
+  Slon = long_cont(Slon);
+  check_val(Slon,'lon');
+  check_val(Slat,'lat');
+  if ~exist('Presctd')
+    Presctd=Pres;
+  end
+  if ~exist('Idynh')
+    Idynh=NaN;
+  end
+  check_val(Presctd,'pres');
+  check_val(Pres,'pres');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%SELECTION OF STATIONS
+ if p_plots
+   if ~exist('Gis2do')
+     global staymen exmen
+     [Gis2do,Secname] = g_choose_stat(Slat,Slon,Presctd,Maxd,Botp,Cruise);
+   else
+     if Gis2do=='a'
+       Gis2do=1:Nstat;
+     end
+     global staymen exmen
+     [Gis2do,Secname] = g_choose_stat(Slat,Slon,Presctd,Maxd,Botp,...
+       Secname,Gis2do);
+   end
+ end
+ if Gis2do=='a'
+   Gis2do=1:Nstat;
+ end
+
+ %REDUCES THE HEADER DATA TO THIS SUBSET
+ Nstatold = Nstat; %preserved for reading the data.
+ Maxdold = Maxd;
+ g_extract
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%DYNAMIC HEIGHT (CREATE IF IT DOESN'T EXIST)
+  if isnan(Idynh) | dynh_option
+    % read temp and sali in either case, 
+    % since we'll need to calculate dynh later in the bottom triangle
+
+    if ~exist('temp')
+      temp = rhydro([IPdir Statfiles(Itemp,:)],Precision(Itemp,:),...
+	MPres(Itemp),Nstatold,Maxdold(:,Itemp));
+    end
+    if ~exist('sali')
+      sali = rhydro([IPdir Statfiles(Isali,:)],Precision(Isali,:),...
+	MPres(Isali),Nstatold,Maxdold(:,Isali));
+    end
+    % extract the selected stations
+    temps = temp(:,Gis2do);
+    check_val(temps,'temp')
+    salis = sali(:,Gis2do);
+    check_val(salis,'sali')
+  end
+  
+  if isnan(Idynh)
+    disp('********************************')
+    disp('* RECOMPUTE THE DYNAMIC HEIGHT *')
+    disp('********************************')
+    disp('computing the dynamic height at selected stations ...')
+    dynhs = sw_gpan(salis,temps,Presctd);
+  else
+    disp('reading the dynamic height at all stations ...')
+    if ~exist('dynh')
+      dynh = rhydro([IPdir Statfiles(Idynh,:)],Precision(Idynh,:),...
+	MPres(Idynh),Nstatold,Maxdold(:,Idynh));
+    end
+    % MULTIPLY DYNH BY 10 to be compatible with sw_<routines> units
+    % sw_<routines> use dyn meters while we use dyn meters / 10
+    dynh=10*dynh;
+
+    % extract the selected stations
+    dynhs = dynh(:,Gis2do);
+    check_val(dynhs/10,'dynh')
+  end
+  
+  % clear T and S now if we're not using the optional dynh calc
+  if ~dynh_option
+    % clear temps salis %THAT IS ONLY USED IF MEMORY PROBLEMS
+  end
+  
+%DISTANCES
+%distance between the stations(in meters):
+  distg = 1e3*sw_dist(Slat,Slon,'km');
+  distt = cumsum(distg);
+  Npair = Nstat-1;
+  dst = 1e-3 * [0; distt];          	% linear distance between stations
+  dpt = 1e-3 * [distt - 0.5 * distg];	% linear distance between pairs  
+  
+%ISHDP: SHALLOW/DEEP STATION INDICE FOR EACH PAIR
+  %(based on deepest observation, not actual depth)
+  %initial order:   
+  ishdp = [1:Nstat-1; 2:Nstat];
+    
+  %'iswitch':
+    isw = find( diff(Botp) < 0 ); 
+    disp('MODIF of ishdp, Jan 97: Pres(Maxd(:,Itemp)) became Botp')
+    
+  %switch order if must:
+    ishdp([1 2],isw) = ishdp([2 1],isw);
+    signp      = p_pos2left * ones(Nstat-1,1); 
+    signp(isw) = -1 *p_pos2left* ones(size(isw));
+% input for mkequats.m, North Atlantic, 24N-36N. New configuration
+%KEY:
+% USAGE :
+% 
+%
+%
+%
+% DESCRIPTION : 
+%
+%
+% INPUT:  pair data and input paramater file
+%
+% OUTPUT: 
+%   <boxi.name>_<boxi.modelid>_equn.mat  : equations and layer properties
+%      Amat[M*N]  : contains int[ dxdz aij Cij
+%      Gunsgn[M*N]: transp, unsigned (positive North East)
+%                   int[ dxdz aij Cij Vgij
+%      G[M] : sumj(sign*Gunsgn) sign=+1 if outflow from the box
+%      Ekman[M]: Ekman transp, over several layers if outcrop
+%                Mass T * mean layer property
+%      Norm[M] : possible normalization of each equation
+%      Rhs[M]  : possible right-hand-side of equations
+%      Rwght[M]: weight of each equation
+%      Cwght[N]: weight of each column
+%      Binit[N]: first guess for B
+%
+%      First Nprops*Nlay Equations are conservation over the whole box
+%      Then come Nprop*Nsec flux(top to bottom) equations
+%      Then come additional flux constraints
+%
+%      OUTPUT PARAMETERS
+%      lunits{iprop}:   unit for each property in the equations
+%
+%      pm.eqname{irow}  : equation label
+%      pm.gifcol(isec)  : first column, section isec
+%      pm.gilcol(isec)  : last  -
+%      pm.ifwcol        : first w term
+%      pm.ilwcol        : last  -
+%      pm.giffrow(isec) : first flux row
+%      pm.gilfrow(isec) : last  -
+%      pm.gifafrow(iflx): first additional flux eqn
+%      pm.gilafrow(iflx): last  -
+%
+%      boxi.*            : box properties
+%      boxi.lavg(ilay,iprop): box layer avg property         
+%      boxi.lstd(ilay,iprop): box layer std. dev.  property         
+%      boxi.lrms(ilay,iprop): box layer rms  property         
+%      boxi.liavg(ilay,iprop): box layer interface avg property         
+%      boxi.listd(ilay,iprop): box layer interface std. deviation         
+%      boxi.lirms(ilay,iprop): box layer interface rms          
+%
+%      The norm of flux equations is base on rms property of the
+%        layer over the whole box
+%
+%      gsecs.Ekt(ilay,isb,iprop): Ekman Transport of each property
+%                                 in each layer
+% OUTPUT FROM mk_set_layprops
+%
+%      lipres{isb}(ip,il): layer interface pressure
+%      rlpres{isb}(ip)   : reference level pressure
+%      gvelrel{isb}(id,ip): relative velocity (M/S)
+%      Lays{isb}.*      : layer properties
+%      Laybs{isb}.*     : layer boundaries(interface) properties
+%
+%
+% AUTHOR : A.Ganachaud (ganacho@gulf.mit.edu) , Jul 97
+%
+% SIDE EFFECTS :
+%
+% SEE ALSO :
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CALLER:
+% CALLEE: mkequats.m
+clear
+
+MASS=1; OXYG=4; NITA=7;
+HEAT=2; PHOS=5; PO38=8;
+SALI=3; SILI=6;
+propnm(MASS,:)='mass'; propnm(HEAT,:)='heat'; propnm(NITA,:)='nita';
+propnm(SALI,:)='sali'; propnm(OXYG,:)='oxyg'; propnm(PO38,:)='po38';
+propnm(PHOS,:)='phos'; propnm(SILI,:)='sili';
+
+OPdir='/data1/ganacho/Boxmod/Natl/';
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PARAMETERS ON EACH SECTION AND FLUX EQUATIONS
+
+gsecs.name   ={'a24n';'flst';'a36n'};  %NAME
+gsecs.namesuf={'polyfit';'polyfit';'polyfit'};  %SUFFIX
+gsecs.datadir{1}='/data1/ganacho/Hdata/Geovelm/';%DATA DIRECTORY
+gsecs.datadir{2}='/data1/ganacho/Hdata/Geovelm/';%DATA DIRECTORY
+gsecs.datadir{3}='/data1/ganacho/Hdata/Geovelm/';%DATA DIRECTORY
+gsecs.inboxdir=[1;1;-1];               %INWARD BOX
+
+gsecs.EkmanT=[3;-2;-2];           %TOTAL EKMAN T
+gsecs.perEk =ones(1,3);                %PERCENTAGE EKMAN
+                                       %IN EACH LAYER
+
+gsecs.npair=[89;10;100];                 %TOTAL PAIRS
+gsecs.binit{1}= zeros(gsecs.npair(1),1); %INITIAL GUESS FOR b's
+gsecs.bstd{1}=  [2*ones(16,1);1*ones(gsecs.npair(1)-18,1);5*ones(2,1)]; 
+%gsecs.bstd{1}=  [2*ones(16,1);.2*ones(gsecs.npair(1)-18,1);5*ones(2,1)]; 
+                                              %STD DEVIATION FOR b's
+gsecs.binit{2}=20*ones(gsecs.npair(2),1);
+gsecs.bstd{2}= 50*ones(gsecs.npair(2),1);
+gsecs.binit{3}= zeros(gsecs.npair(3),1);
+gsecs.bstd{3}= [5*ones(23,1);1*ones(gsecs.npair(3)-25,1);5*ones(2,1)];
+%gsecs.bstd{3}= [5*ones(23,1);.2*ones(gsecs.npair(3)-25,1);5*ones(2,1)];
+%gsecs.colnorm='length';
+
+%(WILL HAVE TO BE CHECKED FOR CONSISTENCY IF MERGED WITH OTHER BOX
+
+%REFERENCE LEVEL
+gsecs.rl.ns=[12;7;12];                 %LAYER INTERFACE ID
+%gsecs.rl.pres{1}=3000;                      %OR PRESSURE VALUE
+%gsecs.rl.pres{2}=3000;                      %OR PRESSURE VALUE
+%gsecs.rl.pres{3}=3000;                      %OR PRESSURE VALUE
+
+%OPTIONAL SPLINE DENSITY FILTER
+%gsecs.sp.pint=[200,700];
+%gsecs.sp.scoef=[.15 1e-4 1e-8];        %0:straight line; 1:exact fit
+%gsecs.sp.junccoef=.15; %must >= max(scoef)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PARAMETERS FOR THE BOX
+
+boxi.modelid='New';                   %MODEL ID
+boxi.name='natl_XVII';                %BOX NAME
+boxi.harea=7.9e12;                    %HORIZONTAL AREA AT SURFACE
+boxi.zonalcoast=0;                    %"ZONAL" COAST TOTAL DIST (m)
+boxi.nlay=18;
+%LAYER INTERFACES
+% GAMMA
+boxi.glevels=[22 26.44 26.85 27.162 27.38 27.62 27.82 27.922 27.975 28.008, ...
+    28.044 28.072 28.0986 28.112 28.1295 28.141 28.154 48]';
+% OR (IF ~EXIST)
+% POT. DENSITY
+%boxi.sigint= [22.00 26.40 26.80 27.10 27.30 27.50 27.70, ...
+%    36.87 36.94 36.98 37.02, ...
+%    45.81 45.85 45.87 45.895 45.91 45.925 48.00]';
+% REFERENCE PRESSURE INDICES
+%boxi.sigipref=[ 1 1 1 1 1 1 1, ...
+%    2 2 2 2,...
+%    3 3 3 3 3 3 3]';
+% REFERENCE PRESSURE
+%boxi.pref=[0 2000 4000]; %DB
+
+
+%CONSERVATION EQUATIONS 
+boxi.conseq.propid=MASS:PO38;
+boxi.conseq.freshw=.72; %FRSW > 0 INTO THE BOX
+boxi.conseq.weight(:,MASS)=1./[3.6;2;1.5;1;.7*ones(13,1);9.4];
+boxi.conseq.weight(:,HEAT)=zeros(18,1);
+boxi.conseq.weight(:,SALI)=boxi.conseq.weight(:,MASS)/34.9;
+boxi.conseq.weight(:,OXYG:PHOS)=zeros(18,2);
+boxi.conseq.weight(:,SILI)=zeros(18,1);%[0;0;0;.05*ones(14,1);.01];
+boxi.conseq.weight(:,NITA)=zeros(18,1);
+boxi.conseq.weight(:,PO38)=zeros(18,1);
+boxi.conseq.norm='one';
+
+%boxi.conseq.wstd=[1e-12*ones(3,1);1e-4*ones(1,1);1e-12*ones(12,1)];   
+boxi.conseq.wstd=1e-4*ones(16,1);   
+ %STD DEV FOR W TERMS
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ADDITIONAL FLUX EQUATIONS
+flxeq(1).name  ='GSfl';
+flxeq(1).secs  =2;
+flxeq(1).sign  =1;       %>0 NORTH EAST NORMALLY
+flxeq(1).prop  =MASS;
+flxeq(1).frhs  =30.9;    %RIGHT-HAND-SIDE
+flxeq(1).toplay=18;      %TOP LAYER
+flxeq(1).botlay=18;      %BOTTOM LAYER
+flxeq(1).fpair =1;       %FIRST PAIR
+flxeq(1).lpair =gsecs.npair(2); %LAST PAIR
+flxeq(1).weight=1/3;      %WEIGHT
+
+flxeq(2).name  ='tt24';
+flxeq(2).secs  =[ 1 2 ];
+flxeq(2).sign  =[ 1 1 ];
+flxeq(2).prop  =MASS;
+flxeq(2).frhs  =-3-0.8-.92;
+flxeq(2).toplay=18;
+flxeq(2).botlay=18;
+flxeq(2).fpair =[1 1];
+flxeq(2).lpair =[gsecs.npair(1) gsecs.npair(2)];
+flxeq(2).weight=1/sqrt(7^2+3^2);
+
+flxeq(3).name  ='tt36';
+flxeq(3).secs  =3;
+flxeq(3).sign  =1;
+flxeq(3).prop  =[MASS];
+flxeq(3).frhs  =[2-0.8-.2];
+flxeq(3).toplay=18;
+flxeq(3).botlay=18;
+flxeq(3).fpair =1;
+flxeq(3).lpair =100;
+flxeq(3).weight=1/6;
+
+%BLOCK FLUX ACROSS MID-ATLANTIC RIDGE
+flxeq(4).name  ='topoE';
+flxeq(4).secs  =[1 3];
+flxeq(4).sign  =[-1 1];
+flxeq(4).prop  =[MASS];
+flxeq(4).frhs  =0;
+flxeq(4).toplay=13;
+flxeq(4).botlay=17;
+flxeq(4).fpair =[52 60];
+flxeq(4).lpair =[82 96];
+flxeq(4).weight=1/sqrt(1^2+1^2);
+
+
+mkequats    
+  % IMPORTANT: ishdp = index shallow - deep
+  % ishdp(1,ipair) contains the indices of the shallow station
+  % ishdp(2,ipair) contains the indices of the deep station
+  % corresponding to pair 'ipair'
+  % signp = +1 if shallow comes before deep
+    Maxdp = Maxd(ishdp(2,:),:);
+   
+%GEOSTROPHIC VELOCITY: TREAT INDIVIDUALLY EACH PAIR
+  %LCD = Last Common Depth
+  gvel = NaN*ones(MPres(Itemp),Npair); %(cm/s)
+
+  if ~exist('Ptreat')
+    Ptreat=defaulttreat*ones(Npair,1); 
+    %indice of the treatment done on the pair:
+	% 1: pair indices that are just maintained (plane fit)
+	% 2: pair indices whose velocity will be set to be constant under LCD
+        % 3:  --------  set manually
+	% 4:  --------  set by const. slope under LCD
+	% 5:  --------  polynomial fit
+    set_ptreat = ones(Npair,1);
+  else
+    if length(Ptreat) ~= Npair
+      error(sprintf(['length(Ptreat) is %i and should be' ...
+      ' Npair=%i'],length(Ptreat),Npair))
+    end
+    set_ptreat = zeros(Npair,1);
+    if exist('P2plot')
+      set_ptreat(P2plot) = ones(size(P2plot));
+    end
+  end %if ~exist('Ptreat')
+
+  %TOPOGRAPHY PLOT
+  %plot the topography and stations
+  if p_plt_topo
+    figure(1); 
+    clf; 
+    set(gcf, 'Position', [4 5 1000 250] );
+    g_pltopo(Nstat, dst, Pres, Maxd(:,Itemp), Botp)
+    %figure(2); 
+    %set(gcf, 'Position', [4 319 560 420])
+  end
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %LOOP OVER THE PAIRS FOR COMPUTING DYNH AND GVEL
+  for ipair = 1:Npair   
+    disp(sprintf('treating pair %i ', ipair))
+
+    if Isctd(Itemp)
+      pres = Presctd;
+    else
+      pres = Pres;
+    end
+
+    iss   = ishdp(1,ipair);	%shallow station index 
+    isd   = ishdp(2,ipair);	%deep    station index 
+    
+    % calculate pair dynamic height
+    sdynh = dynhs(:,iss);
+    ddynh = dynhs(:,isd);
+    pdynh = 0.5 * (sdynh + ddynh); 
+
+    if ~dynh_option %OPTIONAL CODE TO RECOVER GEOVEL.F
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      %Original code of:
+      %extrapolate shal and pair dynh in bottom triangle using g_botwedge
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      if ~isnan(Idynh)
+	dyname=Propnm(Idynh,:);
+	dyunit=Propunits(Idynh,:);
+      else
+	dyname='dynh';
+	dyunit='dy m';
+      end
+      
+      [sdynh,pdynh,ddynh] = g_botwedge(method, p_plt_botwedge, ipair, ...
+	dyname,dyunit , pres, ...
+	sdynh, Maxd(iss,Itemp), ddynh, Maxd(isd,Itemp), pdynh, ...
+	distg(ipair), slopmx);
+      
+    else %(dyn_opt)
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      %Optional code to calculate dynh in bottom triangle based on T and S
+      %extrapolate shal and pair T & S in bottom triangle using g_botwedge
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      
+      % calculate pair temperature 
+      stemp = temps(:,iss);
+      dtemp = temps(:,isd);
+      ptemp = 0.5 * (stemp + dtemp); 
+      
+      % extrapolate shal and pair temp in bottom triangle using g_botwedge
+      [stemp,ptemp,dtemp] = g_botwedge(method, p_plt_botwedge, ipair, ...        
+	Propnm(Itemp,:), Propunits(Itemp,:), pres, ...
+	stemp, Maxd(iss,Itemp), dtemp, Maxd(isd,Itemp), ptemp, ...
+	distg(ipair), slopmx);
+      
+      % calculate pair salinity
+      ssali = salis(:,iss);
+      dsali = salis(:,isd);
+      psali = 0.5 * (ssali + dsali); 
+      
+      % extrapolate shal and pair sali in bottom triangle using g_botwedge
+      [ssali,psali,dsali] = g_botwedge(method, p_plt_botwedge, ipair, ...
+	Propnm(Isali,:), Propunits(Isali,:), pres, ...
+	ssali, Maxd(iss,Isali), dsali, Maxd(isd,Isali), psali, ...
+	distg(ipair), slopmx);
+      
+      % calc shal dynh at all levels based on shallow S and T (for debug only)
+      %sdynh = sw_gpan(ssali,stemp,pres); 
+      
+      % calc shal dynh in bot triangle as an addon to the integrated values up to LCD
+      idtrig = Maxd(iss,Itemp) : Maxd(isd,Itemp);
+      swgp = sw_gpan(ssali(idtrig), stemp(idtrig), pres(idtrig));
+      sdynh(idtrig) = sdynh(Maxd(iss,Itemp)) - swgp(1) + swgp;
+      
+      % calc pair dynh at all levels based on pair S and T
+      pdynh = sw_gpan(psali,ptemp,pres);
+            
+    end	%end Optional code to calculate dynh in bottom triangle
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % geostrophic velocity (cm/s):
+    gvel(:,ipair) = 100*signp(ipair)* ...
+      sw_gvel([sdynh,ddynh], Slat([iss isd]), Slon([iss isd]));
+
+    % analyse the hazardous situations, give warnings and treat:
+    if ~dynh_option
+      g_hotpair
+    else 
+      disp('----NO G_HOTPAIR WITH DYNH_OPTION----------')
+    end
+  end %on ipair
+  
+%COMPUTE SURFACE VELOCITY
+  if exist('Eta')
+    if ~all(isnan(Eta))
+      grav=sw_g(Slat,0); %(m/s^2)
+      svel=-p_pos2left*100*sw_gvel(Eta'.*grav',Slat,Slon); %in cm/s
+    else
+      svel=NaN*ones(1,Npair);  
+    end
+  else
+    svel=NaN*ones(1,Npair);  
+  end
+
+%SAVE THE GEOSTROPHIC VELOCITY
+  if p_saveOP
+    whydro(gvel,[OPdir Velfile],Velprec,Maxdp(:,Itemp),ovw)
+  end
+  
+%VELOCITY PLOT
+  if p_plt_vel
+    figure(2);
+    if exist('Eta')&~isempty(find(~isnan(Eta)))
+      avel=(ones(MPres(1),1)*svel)+gvel;
+    else
+      avel=gvel;
+    end
+    set(gcf, 'Position', [4 250 800 400] );
+    clf;disp('plotting velocity ...')
+    plot_vel(dpt,-Pres,avel);hold off
+    hold on;xlabel('Distance (km)');ylabel('db')
+    g_pltopo(Nstat, dst, Pres, Maxd(:,Itemp), Botp)
+    title(['Geostrophic Velocity (cm/s), ' Secname] )
+    set(gcf,'papero','land');
+    setlargefig
+  end
+  
+
+%CALCULATE THE PROPERTIES AT THE PAIRS AND
+%SAVE THE PAIR PROPERTIES
+
+  g_pairset
+
+%SAVE HEADER FILE
+
+if p_saveOP
+  if ovw
+    if exist([OPdir OPhdr '.mat'])==2
+      disp(['overwrite ' OPdir OPhdr '.mat'])
+    end  
+    Gis_select=Gis2do; % 		stations selected from input file
+    if p_saveOP
+      eval(['save ' OPdir OPhdr  ...
+	  ' IPhdr Treatment Remarks Cruise Secname ' ...
+	  'Npair Plat Plon Velfile Velunit Velprec Ptreat Pbotp ' ...
+	  'Secdate MPres Nstat Slat Slon ' ...
+	  'Botp Pres Presctd Maxd Maxdp Nprop Isctd svel ' ...
+	  'Itemp Isali Ioxyg Iphos Isili Idynh Propnm ' ...
+	  'Propunits Pairfiles Precision ' ...
+	  'Gis_select Ship Cast Xdep Kt Nobs slopmx'])
+      disp(' write header file : ')
+      disp([OPdir OPhdr '.mat'])
+    end
+  else
+    disp('no output file written')
+  end
+end %if p_saveOP
+  
+  %CLOSE DIARY
+  diary off
+  disp('geovel is done')
+  clear dynh temps salis dynhs oxyg phos sili nita
+  clear uvel prop pprop signp sprop dprop dd ddynh
+  clear distg distt dpt dst dyname 
+  clear dyunit exmen grav icastc im ipair iprop is isd ishdp
+  clear iss isw itreat lost_area m2 p_cmp2stat p_load p_plots 
+  clear p_plt_botwedge p_plt_topo p_plt_vel p_pos2left p_saveOP 
+  clear pdynh pname pprop_p pres sdynh set_ptreat staymen strwarn 
+  clear MENU_VARIABLE method men
+  
+%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % DEBUG STUFF
+  %this is all various debug stuff for reference only
+  if exist('DEBUG')
+        figure(4);plot(ddynh,-pres); title('ddynh'); %print -P4;clf
+
+        figure(4); plot(sdynh(1:Maxd(isd,Itemp)),-pres(1:Maxd(isd,Itemp)));
+        % title(sprintf(' %s ipair= %d','sdynh(1:Maxd(isd,Itemp))',ipair));
+        hold on; % print -P4;
+
+        disp('sdynh'); sdynh'
+        figure(4); plot(swgp,-pres(idtrig)); 
+        title(sprintf(' %s ipair= %d','sdynh',ipair));
+        plot(sdynh,-pres); hold off; print -P4; clf
+        % disp('sdynh'); parr(sdynh(:,ipair),11,6,'f',7);
+
+        % disp('pdynh'); parr(pdynh(:,ipair),11,6,'f',7);
+
+        disp('swgp'); swgp'  
+
+        % disp('gvel'); parr(gvel(:,ipair),11,6,'f',7);
+
+        %who
+        disp('display gvel at end')
+        disp(' ');disp(' ');disp(' ');disp(' ');
+        gvel
+  
+  end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

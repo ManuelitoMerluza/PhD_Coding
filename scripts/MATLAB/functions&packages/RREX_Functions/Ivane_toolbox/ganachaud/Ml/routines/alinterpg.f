@@ -1,0 +1,67 @@
+      subroutine mexFunction(nlhs, plhs, nrhs, prhs)
+C     TO COMPILE:
+C     mex alinterpg.f alinterp1.f alinterp.f al_index.f
+      integer plhs(*), prhs(*)
+      integer nlhs, nrhs
+C
+C      integer mxGetM, mxGetN, mxGetPr, mxCreateFull
+      integer m1,m2,m3,m4,m5,m6,m7
+      integer n1,n2,n3,n4,n5,n6,n7
+      integer nd,ni
+      integer x,d,di,w1,w2,wl1,wl2,yi
+  
+C     Check number of arguments
+      if (nrhs.ne.7) then
+         call mexErrMsgTxt('7 input arguments required')
+      elseif (nlhs.ne.1) then
+         call mexErrMsgTxt('1 output arguments required')
+      endif
+C
+C     Check input arguments dimensions
+      m1 = mxGetM(prhs(1))      
+      n1 = mxGetN(prhs(1))
+      m2 = mxGetM(prhs(2))      
+      n2 = mxGetN(prhs(2))
+      m3 = mxGetM(prhs(3))      
+      n3 = mxGetN(prhs(3))
+      m4 = mxGetM(prhs(4))      
+      n4 = mxGetN(prhs(4))
+      m5 = mxGetM(prhs(5))      
+      n5 = mxGetN(prhs(5))
+      m6 = mxGetM(prhs(6))      
+      n6 = mxGetN(prhs(6))
+      m7 = mxGetM(prhs(7))      
+      n7 = mxGetN(prhs(7))
+C
+
+      x=   mxGetpr(prhs(1))
+      d=   mxGetpr(prhs(2))
+      di=  mxGetpr(prhs(3))
+      w1=  mxGetpr(prhs(4))
+      w2=  mxGetpr(prhs(5))
+      wl1= mxGetpr(prhs(6))
+      wl2= mxGetpr(prhs(7))
+
+      nd=m1*n1
+      ni=m3*n3
+
+      if( ((m1*n1).ne.(m2*n2)).or.((m3.ne.1).and.(n3.ne.1)).or.
+     &     ((m4*n4*m5*n5*m6*n6*m7*n7).ne.1)) then
+         call mexErrMsgTxt('bad input arguments dimensions')
+      endif
+      if( ni.gt.10000) then
+         call mexErrMsgTxt(
+     &        'too many interpolation points - recompile or split')
+      endif
+C
+C     Create matrices for return arguments
+      plhs(1)=mxCreateFull(ni,1,0)
+      yi=mxGetpr(plhs(1))
+ 
+C     Call routine
+      call alinterp1(%VAL(x),%VAL(d),%VAL(di),nd,%VAL(w1),%VAL(w2),
+     &                         %VAL(wl1),%VAL(wl2),%VAL(yi),ni)
+
+      return
+      end
+

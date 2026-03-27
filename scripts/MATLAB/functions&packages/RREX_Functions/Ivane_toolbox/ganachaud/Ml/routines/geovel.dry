@@ -1,0 +1,138 @@
+Input data from the directory :
+/data1/ganacho/HDATA/
+Not horizontal extrapolation 
+Using method: SQUEEZEDDEVIATION by default
+Using dynamic height option: 1
+temp and sali are extrapolated, then dynh is recomputed 
+below last common depth (LCD)
+Using maximum slope:   Inf
+ 
+ 
+ 
+ 
+Accept ? (y/n)y
+print figures ? (y/n) n
+reading the dynamic height at all stations ...
+treating pair 1 
+SHALLOW WATER, PAIR 1
+stations    :     1     2
+Depth (db)  :   100   200
+lat         :  26.1  26.1
+lon         : -80.1 -80.0
+distance(km):   4.7 
+delta depth x dist :  0.23 km^2
+treating pair 1 
+treating pair 2 
+SHALLOW WATER, PAIR 2
+stations    :     2     3
+Depth (db)  :   200   250
+lat         :  26.1  26.1
+lon         : -80.0 -79.9
+distance(km):   8.7 
+delta depth x dist :  0.22 km^2
+treating pair 2 
+treating pair 3 
+SHALLOW WATER, PAIR 3
+stations    :     3     4
+Depth (db)  :   250   300
+lat         :  26.1  26.0
+lon         : -79.9 -79.9
+distance(km):  10.5 
+delta depth x dist :  0.26 km^2
+treating pair 3 
+treating pair 4 
+SHALLOW WATER, PAIR 4
+stations    :     4     5
+Depth (db)  :   300   600
+lat         :  26.0  26.0
+lon         : -79.9 -79.8
+distance(km):   8.3 
+delta depth x dist :  1.25 km^2
+treating pair 4 
+treating pair 5 
+CLOSE STATIONS, PAIR 5
+stations    :     5     6
+Depth (db)  :   600   700
+lat         :  26.0  26.0
+lon         : -79.8 -79.7
+distance(km):   9.7 
+delta depth x dist :  0.48 km^2
+treating pair 5 
+treating pair 6 
+CLOSE STATIONS, PAIR 6
+stations    :     6     7
+Depth (db)  :   700   700
+lat         :  26.0  26.0
+lon         : -79.7 -79.6
+distance(km):  10.9 
+delta depth x dist :  0.00 km^2
+treating pair 6 
+treating pair 7 
+CLOSE STATIONS, PAIR 7
+stations    :     8     7
+Depth (db)  :   600   700
+lat         :  26.0  26.0
+lon         : -79.5 -79.6
+distance(km):   8.2 
+delta depth x dist :  0.41 km^2
+treating pair 7 
+treating pair 8 
+CLOSE STATIONS, PAIR 8
+stations    :     9     8
+Depth (db)  :   500   600
+lat         :  26.1  26.0
+lon         : -79.4 -79.5
+distance(km):  10.6 
+delta depth x dist :  0.53 km^2
+treating pair 8 
+treating pair 9 
+CLOSE STATIONS, PAIR 9
+stations    :    10     9
+Depth (db)  :   400   500
+lat         :  26.0  26.1
+lon         : -79.3 -79.4
+distance(km):   3.9 
+delta depth x dist :  0.19 km^2
+treating pair 9 
+treating pair 10 
+SHALLOW WATER, PAIR 10
+stations    :    11    10
+Depth (db)  :   200   400
+lat         :  26.0  26.0
+lon         : -79.2 -79.3
+distance(km):  11.4 
+delta depth x dist :  1.14 km^2
+treating pair 10 
+overwrite existing output ?y
+wrote /data1/ganacho/GARBAGE/flstjm_gvel.fbin
+------------------------------------------------------
+ CALCULATING THE PAIR PROPERTIES 
+ 
+treating temp ...
+wrote /data1/ganacho/GARBAGE/flstjm_temp.fbin
+plotting extrapolated temp ... 
+Check the slope regions (use zoom)
+HIT KEYBOARD TO CONTINUE ...............
+ 
+treating sali ...
+wrote /data1/ganacho/GARBAGE/flstjm_sali.fbin
+ 
+treating oxyg ...
+wrote /data1/ganacho/GARBAGE/flstjm_oxyg.fbin
+ 
+treating phos ...
+wrote /data1/ganacho/GARBAGE/flstjm_phos.fbin
+ 
+treating sili ...
+wrote /data1/ganacho/GARBAGE/flstjm_sili.fbin
+ 
+treating nita ...
+wrote /data1/ganacho/GARBAGE/flstjm_nita.fbin
+ 
+treating dynh ...
+wrote /data1/ganacho/GARBAGE/flstjm_dynh.fbin
+Saving the environement in geovel.mat
+Saving header file /data1/ganacho/GARBAGE/flstjm.hdr.mat
+ write header file : 
+/data1/ganacho/GARBAGE/flstjm.hdr.mat.mat
+geovel is done

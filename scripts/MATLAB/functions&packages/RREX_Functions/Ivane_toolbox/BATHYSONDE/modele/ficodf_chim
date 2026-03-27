@@ -1,0 +1,25 @@
+CHPRESP Probe Sea Pressure                               decibar                 0         15000   6.1f
+CHTEMPP Probe in situ temperature ITS-90                 degree celsius         -2            40   6.3f
+CHPSALP Probe Practical Salinity PSS78                   psu                     0            60   6.3f
+CHPSALB Bottle Practical Salinity PSS78                  psu                     0            60   6.3f
+CHOXYLP Probe dissolved oxygen concentration             ml/l                    0            40   6.3f
+CHOXYLB Bottle dissolved oxygen concentration            ml/l                    0            40   6.3f
+CHOXYKP Probe dissolved oxygen concentration             micromol/kg           100           600   6.3f
+CHOXYKB Bottle dissolved oxygen concentration            micromol/kg           100           600   6.3f
+CHTPOTP Probe potential temperature                      degree celsius         -2            40   6.3f
+CHTPOTB Bottle potential temperature                     degree celsius         -2            40   6.3f
+CHSIG0P Probe density anomaly referenced to P=0          kg/m**3                 0           100   6.3f
+CHSIG0B Bottle density anomaly referenced to P=0         kg/m**3                 0           100   6.3f
+CHNITRB Bottle Nitrate                                   micromol/kg             0             0   6.3f
+CHPHOSB Bottle Phosphate                                 micromol/kg             0             0   6.3f
+CHSILIB Bottle Silicate                                  micromol/kg             0             0   6.3f
+CHALCAB Bottle Alcalinity                                micromol/kg             0             0   6.3f
+CHTDICB Bottle Total dissolved inorganic carbon          micromol/kg             0             0   6.3f
+CHFR11B Bottle Freon 11                                  Pmol/kg                 0             0   6.3f
+CHFR12B Bottle Freon 12                                  Pmol/kg                 0             0   6.3f
+CHF113B Bottle chlorofluorocarbon 113                    micromol/kg             0             0   6.3f
+CHTMPOB Oxygen sample temperature ITS-90                 degree celsius         -2            40   6.3f
+CHCCL4B Bottle tetrachlorid carbon                       micromol/kg             0             0   6.3f
+CHCANTB Bottle anthropogenic carbon                      micromol/kg             0             0   6.3f
+CHP.H.B Bottle anthropogenic carbon                                              0             0   6.3f
+CHIMMRB Bottle immersion                                 meter                   0         15000   6.1f

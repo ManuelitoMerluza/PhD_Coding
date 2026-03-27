@@ -1,0 +1,96 @@
+%script rwb_selectprop: part of w2o_readwocebot
+disp('  rwb_selectprop.m ...')
+
+  onstat=length(gisel);
+
+  for ipropwoce=1:size(varname,1)
+    unit=' ';iprop=0;
+    switch varname(ipropwoce,:)
+      case 'STNNBR' %FIND OUT WHICH INDICE GOES WITH WHICH STATION
+        stnnbrs=botdat(:,ipropwoce);
+	stat_fstdata=find([1;diff(stnnbrs)]);
+	onobs=diff([stat_fstdata;length(stnnbrs)+1]);
+	if onstat~=length(oslon)
+	  disp('.sum and .hyd files do not have the same length !')
+	  disp('PLEASE SELECT THE STATIONS TO MAKE THEM THE SAME LENGTH')
+	end
+	nlev=10*ceil(max(onobs)/10);
+        if ipropwoce~=1
+	  error('STNNBR is not the first, code does not work')
+	end
+	propstr='ssstnnbrs'; %THIS ASSIGNEMENT IS JUST FOR CONSISTENCY BELOW
+      case 'CASTNO'
+        propstr='castno';
+      case 'SAMPNO'
+        propstr='sampno';	
+      case 'BTLNBR'
+        propstr='btlnbr';
+      case 'CTDPRS'
+        propstr='opres';
+      case 'CTDTMP'
+        iprop=1;
+	propstr='  otemp';
+      case 'SALNTY'
+        iprop=2;
+	propstr='  osali';
+      case 'OXYGEN'
+        iprop=3;
+	propstr='  ooxyg';
+      case 'PHSPHT'
+        iprop=4;
+	propstr='  ophos';
+      case 'SILCAT'
+        iprop=5;
+	propstr='  osili';
+      case {'NITRAT','O2+NO3'} %For NO2+NO3
+        %Nitrate + Nitrite if already summed go to onita (good appropx)
+        iprop=6;
+	propstr='  onita';
+      case 'NITRIT'
+        iprop=7;
+	propstr='  oniti';
+      case 'TCARBN'
+        iprop=8;
+	propstr='otcarbn';
+      case 'CFC113'
+        iprop=9;
+	propstr='ocfc113';
+      case '  CCL4'
+        iprop=10;
+	propstr='  occl4';
+      case 'CFC-11'
+        iprop=11;
+	propstr=' ocfc11';
+      case 'CFC-12'
+        iprop=12;
+	propstr=' ocfc12';
+      case {' THETA','CTDSAL','CTDOXY','CTDRAW','OXYTMP','REVPRS','REVTMP'}
+        iprop=-1;
+      otherwise
+	error([varname(ipropwoce,:) ' unknown variable'])
+    end %switch
+    if iprop ==-1
+      disp([varname(ipropwoce,:) ' NOT RETAINED'])
+    else
+      oprop=NaN*ones(nlev,onstat);
+      for isn=1:onstat %isn = indice in the new selection(gisel)
+	isw=gisel(isn); %isw = indice in the woce data
+	if ostnnbr(isn)==stnnbrs(stat_fstdata(isw))
+	  oprop(1:onobs(isw),isn)=...
+	    botdat(stat_fstdata(isw):stat_fstdata(isw)+onobs(isw)-1,ipropwoce);
+	else
+	  disp('ERROR')
+	  disp([ostnnbr(isn),stnnbrs(stat_fstdata(isw))])
+	  error('Problem with station IDs not corresponding')
+	end %if ostnnbr(isn)==stnnbrs(isw)
+      end %is
+      eval([propstr '=oprop;']);
+      if iprop
+	opropnm{iprop}=propstr;
+	disp(sprintf('Variable %i is %s (%s)',iprop,opropnm{iprop},...
+	  varname(ipropwoce,:)))
+	opropunits{iprop}=killblank(varunits(ipropwoce,:));
+      end
+    end %iprop ==-1
+  end%ipropwoce
+  onobs=onobs(gisel);

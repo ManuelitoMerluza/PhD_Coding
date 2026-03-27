@@ -13,9 +13,7 @@ load REXXBathymetry.mat
 
 %% First, we load the variables 
 
-% load("RREX2015_processed_VMP6000_ManuTest.mat")
-
-folder='C:/Users/mitg1n25/Desktop/PhD/Year 1 - 2026/Microstructure Data/RREX/Hydrography';
+folder='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Hydrography';
 filenames = dir(fullfile(folder,'*CTDO.nc')); % Check the variable position
 
 lat2015=ncread(filenames(1).name,'LATITUDE');

@@ -1,0 +1,237 @@
+% ctd_get.m: part of program ctd_treat
+%change 01-05-98: do not compute dynamic height anymore
+%because small gaps in the data create large spikes in the
+%velocity. Dyn h is computed after interpolation/extrapolation
+%of temp and salt (parameter p_gpan)
+p_gpan=0;
+
+disp('')
+disp('  ctd_get.m ...')
+disp(' missing data in the first 60db are copied all the way up')
+disp(' missing data in the last 100db are copied all the way down')
+
+if exist('talleyfmtfile')
+  disp('Talley CTD format')
+  [cslat,cslon,cndep,Cpres,Ctemp,Csali,Coxyg]=...
+    read_talley_ctd([ctddir talleyfmtfile]);
+end
+
+for is=1:cnstat
+  statnbr=cstnnbr(is);
+  disp(sprintf('----------GETTING STATION %i ---------',statnbr))
+
+  if ~exist('talleyfmtfile') %Look up the CTD files
+    ipref=1;isuf=1;
+    while 1
+      fname=sprintf('%s%s%03i%s',ctddir,fctdp(ipref,:),statnbr,fctds(isuf,:));
+      if exist(fname)~=2
+	if isuf<size(fctds,1)
+	  isuf=isuf+1;
+	elseif ipref<size(fctdp,1)
+	  ipref=ipref+1;
+	  isuf=1;
+	else
+	  disp(' ');disp('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+	  disp([fname ' not found'])
+	  disp('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');disp(' ')
+	  menu([fname ' not found'],'Hit me to continue');
+	  break
+	end
+      else
+	break
+      end
+    end %while 1
+  end %~exist('talleyfmtfile')
+
+  if exist('talleyfmtfile') | exist(fname)==2
+    if exist('orstom') & (orstom==1)
+      [ctdstnnbr,ctdbotp,propnmctd,propunitsctd,...
+	  pctd,tctd,sctd,o2ctd]=...
+	ctd_readorstom(fname);
+      if ctdstnnbr~=cstnnbr(is)
+	ctdstnnbr,cstnnbr(is)
+	error('station id do not correspond !')
+      end
+    elseif exist('p14s')&p14s
+      [pctd,tctd,sctd,o2ctd]=ctd_readp14s(fname);
+    elseif exist('i9s')&i9s
+      [pctd,tctd,sctd,o2ctd]=ctd_readi9s(fname);
+    elseif exist('talleyfmtfile')
+      pctd=Cpres{is};
+      tctd=Ctemp{is};
+      sctd=Csali{is};
+      o2ctd=Coxyg{is};
+    else
+      [pctd,tctd,sctd,o2ctd]=whp_ctd(fname);
+      ginan=find(isnan(pctd));
+      pctd(ginan)=[];
+      tctd(ginan)=[];
+      sctd(ginan)=[];
+      o2ctd(ginan)=[];
+    end
+    dp=pctd(length(pctd))-pctd(length(pctd)-1);
+    if any(diff(pctd)<0)
+      error('CTD pressure not increasing')
+    end
+    %Copy the first 60 db data if necessary
+    if pctd(1)~=0 & pctd(1)<=60
+      pp=0:1:(pctd(1)-1);
+      pctd=[pp(:);pctd];
+      tctd=[tctd(1)*ones(length(pp),1);tctd];
+      sctd=[sctd(1)*ones(length(pp),1);sctd];
+      o2ctd=[o2ctd(1)*ones(length(pp),1);o2ctd];
+    end
+    %Copy the last 100 db data if necessary
+    mp=max(pctd);
+    if (cbotp(is)-mp)<100 & (cbotp(is)-mp)>0
+      pp=mp+1:1:cbotp(is);
+      npc=length(pctd);
+      pctd =[pctd; pp(:)];
+      tctd =[tctd; tctd(npc)*ones(length(pp),1)];
+      sctd =[sctd; sctd(npc)*ones(length(pp),1)];
+      o2ctd=[o2ctd;o2ctd(npc)*ones(length(pp),1)];
+    end
+    
+    %Computes Dynamic Height
+    if p_gpan
+      gid=find(~isnan(sctd+tctd));
+      gpan=sw_gpan(sctd(gid),tctd(gid),pctd(gid));
+      %Geopot. anomaly in [m^3 kg^-1 Pa == m^2 s^-2 == J kg^-1]
+      pgpan=pctd(gid);
+    end
+    %Interpolates to standard depths by averaging around the
+    %standard depth point
+    %1-find the indices in the integration interval
+    for iint=1:length(cpres)
+      gi2int0=find(pctd>stdlim(iint) & pctd<=stdlim(iint+1));
+      %
+      %TEMPERATURE
+      %
+      gi2int=gi2int0(find(~isnan(tctd(gi2int0))));
+      if ~isempty(gi2int)
+	if length(gi2int)>1
+	  if (stdlim(iint+1)-pctd(max(gi2int)))<=dp
+	    %simple average if the interval is correctly covered
+	    dh=pctd(max(gi2int))-pctd(min(gi2int));
+	    temp(iint,is)=trapz(pctd(gi2int),tctd(gi2int))/dh;
+	  else
+	    if (stdlim(iint+1)-max(pctd(gi2int)))>100
+	      disp(' temp extrapolation within integration interval')
+	      disp(sprintf(' interval: %i %i',stdlim(iint),stdlim(iint+1)))
+	      disp(sprintf('  last measurement at %i',max(pctd(gi2int))))
+	    end
+	    %extrapolate in the interval
+	    pctd1=[max(pctd(gi2int)):dp:stdlim(iint+1)];
+	    tctd1=extrapole_ls(pctd(gi2int),tctd(gi2int),pctd1);
+	    pctd2=[pctd(gi2int);pctd1(:)];
+	    tctd2=[tctd(gi2int);tctd1];
+	    dh=max(pctd2)-min(pctd2);
+	    temp(iint,is)=trapz(pctd2,tctd2)/dh;
+	  end %if (stdlim(iint+1)
+	end %if length(gi2int)>1
+      end %if ~isempty(gi2int)
+      %
+      % SALINITY
+      %
+      gi2int=gi2int0(find(~isnan(sctd(gi2int0))));
+      if ~isempty(gi2int)
+	if length(gi2int)>1
+	  if (stdlim(iint+1)-pctd(max(gi2int)))<=dp
+	    %simple average if the interval is correctly covered
+	    dh=pctd(max(gi2int))-pctd(min(gi2int));
+	    sali(iint,is)=trapz(pctd(gi2int),sctd(gi2int))/dh;
+	  else
+	    %extrapolate in the interval
+	    pctd1=[max(pctd(gi2int)):dp:stdlim(iint+1)];
+	    sctd1=extrapole_ls(pctd(gi2int),sctd(gi2int),pctd1);
+	    pctd2=[pctd(gi2int);pctd1(:)];
+	    sctd2=[sctd(gi2int);sctd1];
+	    dh=max(pctd2)-min(pctd2);
+	    sali(iint,is)=trapz(pctd2,sctd2)/dh;
+	  end %if (stdlim(iint+1)
+	end %if length(gi2int)>1
+      end %if ~isempty(gi2int)
+      %
+      % DYNAMIC HEIGHT
+      %
+      if p_gpan
+	gi2int1=find(pgpan>stdlim(iint) & pgpan<stdlim(iint+1));
+	gi2int=gi2int1(find(~isnan(gpan(gi2int1))));
+	dh=pgpan(max(gi2int))-pgpan(min(gi2int));
+	if ~isempty(gi2int)
+	  if length(gi2int)>1
+	    if (stdlim(iint+1)-pgpan(max(gi2int)))<=dp
+	      %simple average if the interval is correctly covered
+	      dh=pgpan(max(gi2int))-pgpan(min(gi2int));
+	      dynh(iint,is)=trapz(pgpan(gi2int),gpan(gi2int))/dh/10;
+	    else
+	      %extrapolate in the interval
+	      pgpan1=[max(pgpan(gi2int)):dp:stdlim(iint+1)];
+	      gpan1=extrapole_ls(pgpan(gi2int),gpan(gi2int),pgpan1);
+	      pgpan2=[pgpan(gi2int);pgpan1(:)];
+	      gpan2=[gpan(gi2int);gpan1];
+	      dh=max(pgpan2)-min(pgpan2);
+	      dynh(iint,is)=trapz(pgpan2,gpan2)/dh/10;
+	    end %if (stdlim(iint+1)
+	  end %if length(gi2int)>1
+	end %if ~isempty(gi2int)
+      end %if p_gpan
+      %
+      %OXYGEN
+      %
+      gi2int=gi2int0(find(~isnan(o2ctd(gi2int0))));
+      dh=pctd(max(gi2int))-pctd(min(gi2int));
+      if ~isempty(gi2int)
+	if length(gi2int)>1
+	  if (stdlim(iint+1)-pctd(max(gi2int)))<=dp
+	    %simple average if the interval is correctly covered
+	    dh=pctd(max(gi2int))-pctd(min(gi2int));
+	    oxyg(iint,is)=trapz(pctd(gi2int),o2ctd(gi2int))/dh;
+	  else
+	    if (stdlim(iint+1)-max(pctd(gi2int)))>100
+	      disp(' oxyg extrapolation within integration interval')
+	      disp(sprintf(' interval: %i %i',stdlim(iint),stdlim(iint+1)))
+	      disp(sprintf('  last measurement at %i',max(pctd(gi2int))))
+	    end
+	    %extrapolate in the interval
+	    pctd1=[max(pctd(gi2int)):dp:stdlim(iint+1)];
+	    o2ctd1=extrapole_ls(pctd(gi2int),o2ctd(gi2int),pctd1);
+	    pctd2=[pctd(gi2int);pctd1(:)];
+	    o2ctd2=[o2ctd(gi2int);o2ctd1];
+	    dh=max(pctd2)-min(pctd2);
+	    oxyg(iint,is)=trapz(pctd2,o2ctd2)/dh;
+	  end %if (stdlim(iint+1)
+	end %if length(gi2int)>1
+      end %if ~isempty(gi2int)
+    end %for iint
+    
+    if p_plot
+      clf
+      mp=1000*ceil(max(pctd/1000));
+      subplot(1,4,1)
+      plot(tctd,-pctd,'b-',temp(:,is),-cpres,'ro-');set(gca,'ylim',[-mp 0])
+      title(sprintf('CTD station %i (%i)',is,statnbr));xlabel('temp')
+      subplot(1,4,2)
+      plot(sctd,-pctd,'b-',sali(:,is),-cpres,'ro-');set(gca,'ylim',[-mp 0])
+      xlabel('sali')
+      subplot(1,4,3)
+      plot(o2ctd,-pctd,'b-',oxyg(:,is),-cpres,'ro-');set(gca,'ylim',[-mp 0])
+      xlabel('oxyg (umol/kg)')
+      subplot(1,4,4)
+      plot(gpan/10,-pgpan,'b-',dynh(:,is),-cpres,'ro-');set(gca,'ylim',[-mp 0])
+      xlabel('dynh (m^2/s^2)')
+      %ppause
+      drawnow
+    end %if p_plot
+    if is==-1 %for debug purposes
+      stop
+    end
+    if p_gpan
+      pgpan_=pgpan;
+      gpan_=gpan;
+    end
+    tctd_=tctd;
+    sctd_=sctd;
+  end %exist(fname)==2
+
+end %for is

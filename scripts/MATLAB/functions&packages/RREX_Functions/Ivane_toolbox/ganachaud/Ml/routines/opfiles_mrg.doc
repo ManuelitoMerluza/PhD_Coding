@@ -1,0 +1,30 @@
+Received: from plume.mit.edu by gulf id AA04915g; Wed, 27 Sep 95 15:50:27 EDT
+Received: by plume.mit.edu id AA14093g; Wed, 27 Sep 95 15:50:21 EDT
+Date: Wed, 27 Sep 95 15:50:21 EDT
+From: Diana Spiegel <diana@plume.mit.edu>
+To: ganacho@plume.mit.edu
+Subject: mergech .mat o/p
+Cc: diana@plume.mit.edu
+Status: RO
+
+see the following files in the directory
+/data9/alison/phd/progs/mergech:
+
+ajax_mrg.mat.Z
+at109_mrg.mat
+endev129_mrg.mat
+hall_mrg.mat.Z
+hudson_mrg.mat.Z
+i5_mrg.mat.Z
+m115_mrg.mat.Z
+oc3_mrg.mat.Z
+oc5_mrg.mat.Z
+p3_mrg.mat.Z
+p4_mrg.mat.Z
+sv1_mrg.mat.Z
+sv2_mrg.mat.Z
+sv3_mrg.mat.Z
+sv4_mrg.mat.Z
+tps47_mrg.mat
+ttotas_mrg.mat
+

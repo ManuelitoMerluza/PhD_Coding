@@ -1,0 +1,1 @@
+!lpq -Pcolor15 &

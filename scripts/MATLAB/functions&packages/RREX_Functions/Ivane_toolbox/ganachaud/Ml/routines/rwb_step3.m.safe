@@ -1,0 +1,71 @@
+%rwb_step3: part of readwocebot
+  gis2see=find(any(diff(opres)<=0));
+  for is=gis2see
+    gid=1:onobs(is);
+    gid0=gid;
+    disp('-----------------------------------------------------------');
+    disp(sprintf(...
+      'NON MONOTONIC PRESSURE AT STATION %i (%i)',...
+      is,ostnnbr(is)));
+    while 1
+      p_rev=0;
+     %TEST IF IT IS JUST ONE POINT WHEN THE ROSETTE WAS DROPPED AGAIN
+      inewcast=1+min(find(diff(castno(gid,is))));
+      if ~isempty(inewcast) &...
+	  opres(gid(inewcast+1),is)>opres(gid(inewcast-1),is) &...
+	  opres(gid(inewcast),is)  <opres(gid(inewcast-1),is)
+	gide=inewcast;
+	disp('Firt point of second rosette removed ...')
+	
+      %TEST IF THE WHOLE PRESSURES ARE GOING THE WRONG WAY
+      elseif all(diff(opres(gid,is))<0)
+	disp('Reversing data to have increasing pressure ...')
+	gide=[];
+	gid=onobs(is):-1:1;
+	p_rev=1;
+      else
+	disp(sprintf('id cast\tpres\tctdt\tsali\toxyg\tphos\tsili\tnita\tniti'))
+	for id=gid
+	  if exist('oniti')
+	    disp(sprintf(...
+	      '%02i %i\t%4.0f\t%4.1f\t%5.2f\t%3.0f\t%4.1f\t%5.2f\t%3.2f\t%1.3f',...
+	      id,castno(id,is),opres(id,is),otemp(id,is),osali(id,is),...
+	      ooxyg(id,is),ophos(id,is),osili(id,is),onita(id,is),oniti(id,is)))
+	  else
+	    disp(sprintf(...
+	      '%02i %i\t%4.0f\t%4.1f\t%5.2f\t%3.0f\t%4.1f\t%5.2f\t%3.2f',...
+	      id,castno(id,is),opres(id,is),otemp(id,is),osali(id,is),...
+	      ooxyg(id,is),ophos(id,is),osili(id,is),onita(id,is)))
+	  end
+	end %id
+	gide=input(...
+	  '(0=accept) ENTER DEPTHS TO ELIMINATE (e.g. 1:5,[1:4,5:7],...) ');
+      end
+      if ~isempty(gide)|p_rev %REPLACE THE DATA WITH THE SELECTED DATA
+	gid(gide)=[];
+	gidn=1:length(gid);
+	gnan=NaN*ones(nlev-length(gid),1);
+	opres(:,is)=[opres(gid,is);gnan];
+	castno(:,is)=[castno(gid,is);gnan];
+	sampno(:,is)=[sampno(gid,is);gnan];
+	btlnbr(:,is)=[btlnbr(gid,is);gnan];
+	for iprop=1:nvar
+	  eval([opropnm{iprop} '(:,is)=['opropnm{iprop} '(gid,is);gnan];'])
+	end %iprop
+	Gidselectedpres{is}=gid0(gid);
+	onobs(is)=length(gid);
+	gid=gidn;
+	if isempty(find(any(diff(opres(:,is))<=0)))
+	  break
+	else
+	  disp('STILL SAME/DECREASING PRESSURE !')
+	end
+      else
+	if isempty(find(any(diff(opres(:,is))<=0)))
+	  break
+	else
+	  disp('STILL SAME/DECREASING PRESSURE !')
+	end
+      end %~gid
+    end %while 1
+  end %is

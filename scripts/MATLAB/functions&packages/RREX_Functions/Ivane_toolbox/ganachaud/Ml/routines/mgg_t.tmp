@@ -1,0 +1,17 @@
+=CMT=V3.0=
+01c01$12c synopsis :01$0001$37c  depths must be positive (Pressure)01$01c01$0001$15c description :01$0001$70c   find the depth of th
+e isopycnals in sigint by linear interpolation01$42c   of the sigma values contained in sigs.01$63c   sigs and sigint are relative t
+o the same pressure reference01$39c   If above the surface, depth is zero01$55c   If under last standard depth, depth is extrapolate
+d01$43c   If under bottom, depth is bottom depth.01$01c01$08c INPUTS01$43c   nd          : number of standard depths01$33c   np     
+     : number of pairs01$38c   ns          : number of interfaces01$44c   pres(nd)    : pressure array (depth, db)01$30c   botdep(np
+)  : bottom depth01$57c   imaxd(np)   : max standard depth index, before bottom01$61c   sigs(nd,np) : sigma values at each point on 
+the std grid,01$33c                 -1 under bottom01$40c   sigint(ns)  : sigma interface values01$0001$15c OUTPUTS (I/O)01$51c   ps
+ig(np,nl) : pressure value for each interface01$01c01$0001$08c uses :01$0001$49c side effects : if we are outside the data range01$5
+0c                sigprop is linearily extrapolated01$0001$30c author : A.Ganachaud, Jan 9701$0001$13c reference :01$62c   same as A
+lison's routine set_bdata, except that the bottom01$63c   pressure is the actual bottom rather than the last standard01$09c   depth0
+1$0001$12c see also :01$0001$70cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc01$0001$0001$33c     indices: i
+d = depth indices01$32c              ip = pair indices01$39c              il = sigma-layer indices01$0001$0001$19c     FOR EACH PAIR
+01$0001$33c        FOR EACH LAYER INTERFACE01$0001$52c           IF ABOVE THE SURFACE, SET TO THE SURFACE01$46c             FIND SUR
+ROUNDING STANDARD DEPTHS01$38c                 sigma at the surface01$0001$41c                 THERE IS ONLY ONE POINT01$0001$49c   
+              EXTRAPOLATE SIGMA AT THE BOTTOM01$58C                    THE PSIG TAKES THE BOTTOM DEPTH VALUE01$62c                  
+  INTERPOLATES BETWEEN BOTTOM SIGMA AND LSD01$36c              REGULAR INTERPOLATION01$0001$0001$26c        LOOP ON INTERFACE01$23c 

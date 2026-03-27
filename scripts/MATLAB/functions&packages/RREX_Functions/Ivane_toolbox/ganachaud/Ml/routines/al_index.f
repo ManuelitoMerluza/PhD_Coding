@@ -1,0 +1,29 @@
+C-------------------------------------------------------------------------
+C FUNCTION INDEX SEARCHES ARRAY OF FUNCTION VALUES (X) FOR NON-FLAGGED
+C VALUES.  IT SETS INDEX=I=IFIRST, AND RETURNS WITH THIS VALUE IF
+C X(I) .NE. FLAG  IF X(I)=FLAG, IT SEARCHES UP IN TABLE IF LOOKING FOR
+C I1, OR DOWN THE TABLE IF SEARCHING FOR I2,I3.  I1,I2,I3 ARE USED
+C BY FUNCTION XNODC FOR AITKEN-LAGRANGE INTERPOLATION.
+C-------------------------------------------------------------------------
+      integer*4 FUNCTION AL_INDEX(IFIRST,ILAST,ISIGN,X)
+
+      REAL*8 X(1)
+C-------------------------------------------------------------------------
+
+      FLAG=-999.
+      AL_INDEX=0
+      I=IFIRST
+  1   ISUB=I-ILAST+1-ISIGN
+C IF SEARCHING UP THE TABLE, ISUB=I+1 AND IF I+1=1, THEN I=0, SO QUIT.
+C IF SEARCHING DOWN THE TABLE, ISUB=I-N AND IF I-N=1, THEN I=N+1,
+C SO QUIT.
+      IF (ISUB .EQ. 1) GO TO 10
+C QUIT WITH AL_INDEX=0, NO NON-FLAGGED VALUE
+      IF(X(I).GT.FLAG) GO TO 20
+      I=I+ISIGN
+      GO TO 1
+ 10   RETURN
+ 20   AL_INDEX=I
+
+      RETURN
+      END

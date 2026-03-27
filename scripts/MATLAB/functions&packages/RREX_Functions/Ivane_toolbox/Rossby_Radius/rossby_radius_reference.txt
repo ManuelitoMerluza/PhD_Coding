@@ -1,0 +1,10 @@
+Chelton, D. B., R. A. deSzoeke, M. G. Schlax, K. El Naggar and N. Siwertz, 1998: Geographical variability of the first-baroclinic Rossby radius of deformation. J. Phys. Oceanogr., 28, 433-460. 
+
+* latitude in degrees from -75.5 to 89.5 (negative for southern hemisphere)
+* longitude in degrees east from 0.5 to 359.5
+* baroclinic gravity-wave phase speed c in m/s
+* baroclinic Rossby radius of deformation r in km. 
+
+http://www.ig.utexas.edu/people/staff/rscott/personal.htm
+http://www.coas.oregonstate.edu/research/po/research/chelton/index.html
+

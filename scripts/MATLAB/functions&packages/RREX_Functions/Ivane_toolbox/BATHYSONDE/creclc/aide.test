@@ -1,0 +1,66 @@
+function aide(i)
+
+% i = numero du message
+% =====================
+
+
+
+% 1 = message de presentation du logiciel
+
+% messages 2 a 7 : explications sur les parametres de lissage
+% -----------------------------------------------------------
+
+
+% 2 = largeur              (lissage Lanczos)
+% 3 = frequence de coupure (lissage lanczos)
+
+% 4 = largeur              (lissage creneau)
+ 
+% 5 = largeur              (lissage Gauss)
+% 6 = ecart-type           (lissage Gauss)
+
+% 7 = frequence de coupure (lissage Butterworth)
+
+% messages 8 à 12 : explications provenant de la création des fichiers Echange
+% ---------------------------------------------------------------------------
+
+% 8 = Modification de format
+
+% 9 = Modification de pmin, pmax et du pas 
+
+% 10
+
+% 11
+
+% 12
+
+ messaide = [];
+
+messaide (1) = 'Ce logiciel permet d''effectuer le traitement standard (à terre) des données d''hydrologie et de géochimie.'
+
+messaide (2) = 'Demi-largeur du filtre exprimée en nombre de points'
+
+messaide (3) = 'Fréquence de coupure du filtre définie comme l''inverse d''un nombre de points. Valeur comprise entre 1/2 et 1/nombre total de points dans le profil.'
+
+messaide (4) = 'Demi-largeur du filtre exprimée en nombre de points'
+
+messaide (5) = 'Demi-largeur du filtre exprimée en nombre de points'
+
+messaide (6) = 'Ecart-Type'
+
+messaide (7) = 'Fréquence de coupure'
+
+messaide (8) = ' Ce menu vous permet de choisir les paramètres physiques et chimiques que vous désirez voir apparaître dans vos fichiers d''échange. Pour sélectionner un paramètre, il suffit de cliquer sur son code dans la zone ''Disponibles'', pour le désélectionner, de cliquer dans la zone ''Choisis''.'
+
+messaide (9) = ' Ce menu vous permet de transformer à volonté les formats des données que vous désirez lister dans vos fichiers d''échange.'
+
+messaide (10) = '  Ce menu vous permet de ne mettre dans vos fichiers d''échange que les données récupérées dans une tranche de pression.'
+
+messaide (11) = ' Ce menu vous permet d''établir un pas d''échantillonnage dans vos fichiers d''échange. Ainsi un pas de 10 recupèrera une donnée sur 10 dans le fichier origine. Le pas par défaut est de 1. Vous pouvez également choisir de n''étudier qu''une partie des données des stations, vous modifierez alors les pressions minimum et maximum.'
+
+messaide (12) = ' Ce menu vous permet de modifier les formats de données des paramètres que vous avez choisis. Cliquez sur le code du paramètre dont vous désirez modifier le format, et modifiez-le dans la zone de texte située à droite de l''écran en le validant par une simple pression du bouton Modifier.'
+
+%messaffich = messaide{1};
+
+
+helpdlg(char(messaide(i))','Guide'); 

@@ -1,0 +1,69 @@
+      subroutine mexFunction(nlhs, plhs, nrhs, prhs)
+      integer plhs(*), prhs(*)
+      integer nlhs, nrhs
+C
+      integer mxGetM, mxGetN, mxGetPr, mxCreateFull
+C      integer mxCopyPtrToInteger4
+      integer*4 m1,m2,m3,m4,m5,m6,m7,m8
+      integer*4 n1,n2,n3,n4,n5,n6,n7,m8
+      integer*4 nnd,nnp,nns
+      integer*4 nd,np,ns,pres,botdep,imaxd,sigs,sigint,psig
+C
+C     Check number of arguments
+      if (nrhs.ne.8) then
+         call mexErrMsgTxt('8 input arguments required')
+      elseif (nlhs.ne.1) then
+         call mexErrMsgTxt('1 output arguments required')
+      endif
+C
+C     Check input arguments dimensions
+      m1 = mxGetM(prhs(1))      
+      n1 = mxGetN(prhs(1))
+      m2 = mxGetM(prhs(2))      
+      n2 = mxGetN(prhs(2))
+      m3 = mxGetM(prhs(3))      
+      n3 = mxGetN(prhs(3))
+      m4 = mxGetM(prhs(4))      
+      n4 = mxGetN(prhs(4))
+      m5 = mxGetM(prhs(5))      
+      n5 = mxGetN(prhs(5))
+      m6 = mxGetM(prhs(6))      
+      n6 = mxGetN(prhs(6))
+      m7 = mxGetM(prhs(7))      
+      n7 = mxGetN(prhs(7))
+      m8 = mxGetM(prhs(8))      
+      n8 = mxGetN(prhs(8))
+C
+      if ((m1*n1*m2*n2*m3*n3).ne.1) then
+         call mexErrMsgTxt('1,2,3th input arguments misplaced')
+      endif
+
+      nd=    mxGetpr(prhs(1))
+      np=    mxGetpr(prhs(2))
+      ns=    mxGetpr(prhs(3))
+      pres=  mxGetpr(prhs(4))
+      botdep=mxGetpr(prhs(5))
+      imaxd= mxGetpr(prhs(6))
+      sigs=  mxGetpr(prhs(7))
+      sigint=mxGetpr(prhs(8))
+
+      call mxCopyPtrToInteger4(nd,nnd,1)
+      call mxCopyPtrToInteger4(np,nnp,1)
+      call mxCopyPtrToInteger4(ns,nns,1)
+      if( ((n3*m3).ne.nnd).or.((m4*n4).ne.nnp).or.((m5*n5).ne.nnp).or.
+     &     (m6.ne.nnd).or.(n6.ne.nnp).or.((m7*n7).ne.nns) ) then
+         call mexErrMsgTxt('bad input arguments dimensions')
+      endif
+C
+C     Create matrices for return arguments
+C      plhs(1)=mxCreateDoubleMatrix(mm,nn,0)
+      plhs(1)=mxCreateFull(nnp,nnl,0)
+      psig=mxGetpr(plhs(1))
+C
+C     Call routine
+      call getsigpres(%VAL(nd),%VAL(np),%VAL(ns),%VAL(pres),%VAL(botdep),
+     &     %VAL(imaxd),%VAL(sigs),%VAL(sigint),%VAL(psig))
+         
+      return
+      end
+

@@ -1,0 +1,57 @@
+function yf=filter_rows_gaussian(x,y,r)
+% KEY: apply a gaussian smoothing to y rows. X is distance, 
+%   r the smoothing radius Weight: exp(-.5*(x-x(i)).^2/r^2)
+%   
+% USAGE : yf=filter_rows_gaussian(x,y,r)
+% 
+% INPUT: 
+%  x: distance between points (vector)
+%  y: matrix of which to smooth the rows
+%  r: radius of smoothing (number)
+%
+% OUTPUT:
+%  yf: smoothed y matrix
+%
+% DESCRIPTION
+%  
+% AUTHOR : A.Ganachaud (ganacho@gulf.mit.edu) , Jan 98
+%
+% SIDE EFFECTS :
+%
+% SEE ALSO :
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CALLER: general purpose
+% CALLEE:
+
+[m,n]=size(y);
+x=x(:);
+for i=1:n
+  gineighbors=find(abs(x-x(i))<(4*r));
+  weights=exp(-.5*(x(gineighbors)-x(i)).^2/r^2);
+  yf(:,i)=sum( (ones(m,1)*weights').*y(:,gineighbors),2)...
+    /sum(weights);
+end
+
+if 0
+  %test
+  x0=-100:100;
+  ts=1;
+  r=1;
+  weights=exp(-.5*(x0).^2/r^2);
+  [H,f]=freqz(weights,1,1024,1/ts);
+  subplot(2,1,1)
+  plot(x0,weights)
+  set(gca,'xlim',[-50,50])
+  xlabel('lag')
+  ylabel('non-normalized weight')
+  legend('r=10')
+  subplot(2,1,2)
+  plot(f,ts*abs(H))
+  set(gca,'xlim',[0 0.1])
+  xlabel('wavenumber')
+  ylabel('response')
+  suptitle('Gaussian filter')
+  setlargefig
+  
+end

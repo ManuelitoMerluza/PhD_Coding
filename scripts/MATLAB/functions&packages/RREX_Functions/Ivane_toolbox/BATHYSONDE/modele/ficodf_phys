@@ -1,0 +1,26 @@
+PRES Pressure                                               decibar              0         15000  6.1f
+ZCOO Vertical coordinate (negative) from local density      meter           -15000             0  6.1f
+DEPH Vertical coordinate (positive) from local density      meter                0         15000  6.1f
+TEMP In situ temperature ITS-90                             degree celsius      -2            40  6.3f
+OXYL Dissolved oxygen concentration                         ml/l                 0            40  6.3f
+OXYK Oxygen                                                 um/kg              100           400  6.2f
+IMMR Depth below sea surface (UNESCO)                       meter                0         15000  6.2f
+TPOT Potential Temperature                                  degree celsius      -2            40  6.2f
+DYNH Dynamical height                                       dynamical meter   -100           100  6.3f
+BRV2 Brunt Vaisala Frequency squared                        (rad/s)**2          -1             1 10.3e
+FBRV Brunt Vaisala Frequency                                rad/s               -1             1 10.3e
+VORP Planetary Vorticity (f/h)                              (m*s)**(-1)         -1             1 10.3e
+SIG0 Density anomaly referenced to P=0                      kg/m**3              0           100  8.5f
+SIG1 Density anomaly referenced to P=1000                   kg/m**3              0           100  8.5f
+SIG2 Density anomaly referenced to P=2000                   kg/m**3              0           100  8.5f
+SIG3 Density anomaly referenced to P=3000                   kg/m**3              0           100  8.5f
+SIG4 Density anomaly referenced to P=4000                   kg/m**3              0           100  8.5f
+SIG5 Density anomaly referenced to P=5000                   kg/m**3              0           100  8.5f
+SIG6 Density anomaly referenced to P=6000                   kg/m**3              0           100  8.5f
+SI15 Density anomaly referenced to P=1500                   kg/m**3              0           100  8.5f
+GAMM Neutral surface label(Mac Dougal)                      kg/m**3              0           100  8.5f
+SIGI In-situ density anomaly                                kg/m**3              0           100  8.5f
+SSDG Sound Speed Del Grosso formula                         m/s               1000          2000  5.1f
+VSON Sound Speed (CHEN)                                     m/s               1000          2000  5.1f
+PSAL Practical Salinity PSS78                               psu                  0            60  6.3f
+COND Conductivity                                           mS/cm                0            60  6.3f

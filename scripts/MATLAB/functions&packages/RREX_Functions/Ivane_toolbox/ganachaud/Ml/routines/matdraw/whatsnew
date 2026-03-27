@@ -1,0 +1,48 @@
+Changes from version 2.0
+
+New Features:
+
+Erik Johnson's ARROW function has been incorporated into
+MatDraw.  There is now an Arrow submenu in the Draw Menu
+which allows the user to convert regular lines to arrows
+and vice-versa.  There is also a dialog box accessible 
+through the Arrow Tips menu item in the Arrow submenu which
+allows control of the size and shape of the arrows.  To 
+take advantage of the 3D arrows allowed by Erik's function,
+3D drawing and resizing of lines is now possible in MatDraw.
+Specification of coordinates is done in the same way as in
+the 3D zoom function which was available in MatDraw 2.0. 
+Note that due to quirks in MATLAB's processing of mouse clicks,
+it may sometimes be difficult to select a specific line in a
+3D plot.  This occurs when the object is "behind" a surface object.
+For details, see the Release Notes for MATLAB 4.2.  
+
+In the Workspace Menu an item called "Add to Path" has been
+added.  This brings up a standard "open" dialog box; to add
+a directory to your MATLABPATH simply use the dialog box to
+select a file in the relevant directory.
+
+Changes:
+
+The Page Title item in the Figure Menu has been subsumed into
+the Labels dialog box.
+
+Bug Fixes:
+
+A couple of capitalization mistakes have been found and corrected.
+
+The order in which properties were assigned in creation of some
+uicontrols in certain dialog boxes was such that they came out 
+looking wrong on some platforms, most notably the SGI.  This has
+been fixed.
+
+Text rotation did not work properly.  It has been fixed.
+
+When creating a text object, clicking outside of the edit uicontrol
+created a new edit uicontrol and rendered the former one unusable.
+Now, when you click outside of an edit uicontrol whatever was in
+the last one is registered and it is dismissed.
+
+
+
+

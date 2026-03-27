@@ -1,0 +1,83 @@
+% script readalisonbot
+% KEY: read bottle data from Alison's format
+% USAGE :
+% 
+%
+%
+%
+% DESCRIPTION : 
+%
+%
+% INPUT PARAMETERS
+%  nhdr : name of header file
+%  nifile: name of input bottle file
+%  nlev: number of levels in the bottle file
+%  nvar: number of variables     (not including pressure)
+%  propnm: name of each property (not including pressure)
+%  nstat:number of stations
+%  e.g.: /data39/alison/phd/atldata/at109readobsfile_input.m
+%
+% OUTPUT:
+%  Slat, Slon, ...
+%  opres, otemp, ...
+%
+% AUTHOR : A.Ganachaud (ganacho@gulf.mit.edu) , Oct 97
+%
+% SIDE EFFECTS :
+%
+% SEE ALSO :
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CALLER:
+% CALLEE: Hydrosys routines
+  if p_woce
+    error('p_woce was set together with p_alison')
+  end
+  if ~exist('nhdr')
+    disp('running default parameter file ...')
+    readobsfile_input
+    disp(['READING ' nifile])
+    disp(nhdr)
+  end
+  
+  %READ HEADER FILE
+  fidh=fopen(nhdr,'r');
+  Shipid=fread(fidh,[nstat,1],'int32');
+  ostnnbr=fread(fidh,[nstat,1],'int32');
+  oslat  =fread(fidh,[nstat,1],'float');
+  oslon  =fread(fidh,[nstat,1],'float');
+  obotd  =fread(fidh,[nstat,1],'float');
+  Kt    =fread(fidh,[nstat,1],'int32'); 
+  Xdep  =fread(fidh,[nstat,1],'float'); %deepest measurement
+  onobs  =fread(fidh,[nstat,1],'int32');
+  Maxd  =fread(fidh,[nstat,1],'int32');
+  if ~isempty(fread(fidh))
+    error('more info in header file')
+  end
+  fclose(fidh);
+  
+  %READ OBSERVATIONS
+  reclen=4*(nvar+1)*nlev;
+  
+  fid=fopen(nifile,'r');
+  for is=1:nstat
+    rec=fread(fid,[nlev,nvar+1],'float');
+    opres(:,is)=rec(:,1);
+    for iprop=1:nvar
+      oprop=rec(:,iprop+1);
+      eval([propnm(iprop,:) '(:,is)=oprop;'])
+    end
+  end
+  fclose(fid);
+  
+  %MASK THE DATA BELOW LAST OBSERVATION, REMOVE -999 -> NaN
+  issurfnull=find(opres(1,:)==0);
+  opres(1,issurfnull)=ones(size(issurfnull));
+  ggidry=find(opres==0);
+  for iprop=1:nvar
+    eval(['prop=' propnm(iprop,:) ';'])
+    prop(ggidry)=NaN*ones(size(ggidry));
+    ginan=find(prop==-999);
+    prop(ginan)=NaN*ones(size(ginan));
+    eval([propnm(iprop,:) '=prop;'])
+  end
