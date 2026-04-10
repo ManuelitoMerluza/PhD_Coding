@@ -2,13 +2,11 @@
 clear all
 close all
 
-addpath('/home1/triagoz/matlab/outils_matlab/m_map1.4h/')
-addpath('/home1/homedir5/perso/petitt/matlab/These/colormap')
-addpath('/home/lpo5/herle/matlab_environnement_de_traitement/visu/hmercier/matlab/matlab_fct_herle');
-genpath('/home4/homedir4/perso/plhermin/matlab/netcdf_lpo');
+addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding'))
+
 %%
-fsadcp = '/home1/homedir5/perso/herle/RREX/data_rrex17/sadcp/OS38/nce/';
-file_sadcp = 'AT_RREX17_OS38_osite_m09_004_12_fhv21_sec_02mx21.nc'
+fsadcp = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_Hydro2017/sadcp/OS38/nce/';
+file_sadcp = 'AT_RREX17_OS38_osite_m09_004_12_fhv21_sec_02mx21.nc';
 
 [UVEL_ADCP, VVEL_ADCP, SecLat, SecLon, DEPH, JULD, U_TIDE, V_TIDE, INDICE, BATHY] = rsadcp_rrex([fsadcp file_sadcp]);
 
@@ -16,7 +14,7 @@ file_sadcp = 'AT_RREX17_OS38_osite_m09_004_12_fhv21_sec_02mx21.nc'
 zone_visu=[50 65 -45 -15];
 proj='mercator';
 
-file_bathy = '/home5/pharos/REFERENCE_DATA/BATHYMETRY/DATA/ETOPO1_Bed_g_gmt4.nc';
+file_bathy = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/data_for_Ivane_toolbox/ETOPO1_Bed_g_gmt4.nc';
 lat_bathy = ncread(file_bathy,'y'); % a adapter par l'utilisateur
 lon_bathy = ncread(file_bathy,'x'); % a adapter par l'utilisateur
 min_lat = zone_visu(1);                        % a adapter par l'utilisateur
@@ -55,7 +53,7 @@ hold on; m_contour(lon_bathy,lat_bathy,bathy,[0 0],'k','linewidth',1);
 xlabel('Longitude (°W)'); ylabel('Latitude (°N)');
 
 % On trace la position des stations CTD
-fctd = '/home/lpo5/HYDROCEAN/MLT_NC/LPO/RREX/RREX17/rr17_PRES.nc';
+fctd = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_Hydro2017/ctd/nc/rr17_PRES.nc';
 lat = ncread(fctd,'LATITUDE'); lg = ncread(fctd,'LONGITUDE'); lat = lat(2:end); lg = lg(2:end);
 latitude = [lat(2:17)' lat(18:24)' lat(27:29)' lat(31:43)' lat(44:55)' lat(56:69)' lat(76:125)'];
 longitude = [lg(2:17)' lg(18:24)' lg(27:29)' lg(31:43)' lg(44:55)' lg(56:69)' lg(76:125)'];

@@ -1,15 +1,16 @@
+% This script makes a section plot of velocity in order to compare the
+% results derived from the old seawater functions and the more recent gsw
+% package
+
 %close all; 
 clear all;
 
 
-section='ride';
-
-
-
+section='ride'; % Change in order to plot other sections
 
 %%% lecture des données
-load(['/home4/homedir4/perso/isalaun/Matlab/matlab_output_RREX17/hydro_data/dens_sw_vs_gsw_',section,],'SA','CT','rho_gsw_exact','rho_sw', 'ga_sw');
-load(['/home4/homedir4/perso/isalaun/Matlab/matlab_output_RREX17/vitesse_abs/OS38_section_',section,],'v_abs', 'z_abs','lat_abs','lon_abs');
+load(['C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/hydro_data/dens_sw_vs_gsw_',section,],'SA','CT','rho_gsw_exact','rho_sw', 'ga_sw');
+load(['C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/vitesse_abs/OS38_section_',section,'_use'],'v_abs', 'z_abs','lat_abs','lon_abs');
 
 
 %% ========================================================================
@@ -65,15 +66,13 @@ v=v_abs;
 
 figure;
 set(gcf,'PaperType','A4','PaperOrientation','landscape','PaperUnits','centimeters','PaperPosition',[1,1,24,18],'Posi',[185 0 1200 800]);
-%load mapcolor2; 
-addpath('/home4/homedir4/perso/isalaun/Matlab/toolbox/my_colormap');
 load vmap0
 vcol=-.2:.02:.2;
 
-%[c,h]=contourf(X1,zat.*1e-3,v,vcol);
-%hold on; 
+[c,h]=contourf(X1,zat.*1e-3,v,vcol);
+hold on; 
 %[c,h]=contour(X1,zat.*1e-3,rho_sw(:,1:end-1)-1000,[27.52 27.71 27.8],'-k','LineWidth',1);
-[c,h]=contour(X1,zat.*1e-3,rho_gsw_exact(:,1:end-1)-1000);
+%[c,h]=contour(X1,zat.*1e-3,rho_gsw_exact(:,1:end-1)-1000); %,[27.52 27.71 27.8],'-k','LineWidth',1);
 
 set(gca,'ydir','reverse')
 xlabel(xlab); ylabel('Depth (km)');

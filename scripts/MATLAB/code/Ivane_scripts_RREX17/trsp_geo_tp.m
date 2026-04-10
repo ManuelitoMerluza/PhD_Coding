@@ -1,4 +1,4 @@
-function tr=trsp_geo(u,zl,dpair)
+function tr=trsp_geo_tp(u,zl,dpair)
 
 % calcul du transport tr(npair) associé au champ de vitesse u, entre deux
 % limites de profondeur fixées

@@ -7,15 +7,14 @@
 clear all; 
 close all;
 
-addpath(genpath('/home/lpo5/herle/matlab_environnement_de_traitement/devlp/logiciels_lpo/matlab/outils_matlab/seawater/seawater_330_its90_lpo'));
-addpath(genpath('/home/lpo5/herle/matlab_environnement_de_traitement/devlp/logiciels_lpo/matlab/outils_matlab/seawater/gsw_matlab_v3_04_TR'));
+addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding'))
 
 %http://www.teos-10.org/pubs/gsw/v3_04/pdf/Getting_Started.pdf
 
 % CHOIX DE LA SECTION parmi les sections 'north', 'ovide','south' , 'ride'
 section = 'ride';
 
-rept = '/home4/homedir4/perso/isalaun/Matlab/matlab_output_RREX17/hydro_data/';
+rept = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/hydro_data/';
 %% ========================================================================
 % Definition des stations hydro pour chaque section
 if strcmp(section,'north')
@@ -42,7 +41,7 @@ end
 
 %% ========================================================================
 %%% Lecture des fichiers hydro
-fctd = '/home/lpo5/HYDROCEAN/MLT_NC/LPO/RREX/RREX17/rr17_PRES.nc';
+fctd = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_Hydro2017/ctd/nc/rr17_PRES.nc';
 % on sectionne la data et supprime la premiere station 0 (station test)
 
 SP = ncread(fctd,'PSAL'); %pratical salinity (psu)
@@ -97,7 +96,7 @@ save([rept file_save],'SA','CT','rho_gsw_exact','rho_sw', 'ga_sw');
 % elseif strcmp(section,'ride'); 
 %     ind_bad=find(bathy_ship(2:end-1)<0.1);
 % end  
-%  
+% 
 % for i=1:length(ind_bad)
 %     j=length(ind_bad)+1-i;
 %     bathy_ship(ind_bad(j)+1)=[];
@@ -119,8 +118,8 @@ save([rept file_save],'SA','CT','rho_gsw_exact','rho_sw', 'ga_sw');
 % end
 % 
 % end
-
-
+% 
+% 
 % figure;
 % set(gcf,'PaperType','A4','PaperOrientation','landscape','PaperUnits','centimeters','PaperPosition',[1,1,24,18],'Posi',[185 0 1200 800]);
 % 
@@ -130,7 +129,7 @@ save([rept file_save],'SA','CT','rho_gsw_exact','rho_sw', 'ga_sw');
 % 
 % set(gca,'ydir','reverse')
 % %xlabel(xlab); ylabel('Depth (km)');
-%  
+% 
 % hold on; fill(X_bathy(:),bathy_ship,[0.5 0.5 0.5]);
 % 
 % if strcmp(section,'ovide');

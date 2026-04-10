@@ -1,76 +1,64 @@
-% author(s): I. Salaun 10/2018 new 06/2020
+% Author(s): I. Salaun 10/2018 new 06/2020
+% Modified by: Manuel Torres 04/2026
 %
-%description : 
-% Computation of absolute geostrophic velocities across each hydrographic 
-% section of the RREX2017 cruise 
-% Geostrophic velocities constrained by SADCP velocities (OS38) horizontally 
-% and vertically filtred (2km -16m) and averaged between stations at a 
-% reference depth determined by comparison between geostrophic and ADCP 
-% profiles 
+% Description : 
+%  Computation of absolute geostrophic velocities across each hydrographic 
+%  section of the RREX2017 cruise 
+%  Geostrophic velocities constrained by SADCP velocities (OS38) horizontally 
+%  and vertically filtred (2km -16m) and averaged between stations at a 
+%  reference depth determined by comparison between geostrophic and ADCP 
+%  profiles 
 %
 %see also : vit_geo_2017.m  section2km_SADCP_2017.m
 
-%% ========================================================================
+%% Adds paths where all the functions and data are located
 close all; 
 clear all;
 
-addpath(genpath('../toolbox/matlab/matlab/adcp_lpo_V6.2')); %meanoutnan
-addpath(genpath('../toolbox/matlab/matlab/outils_matlab/lpo')); %Lanczos
-addpath(genpath('../toolbox/netcdf_lpo'));
-addpath(genpath('../toolbox/matlab/matlab/outils_matlab/statistique'));
-addpath(genpath('../toolbox/my_colormap'));
-%% ========================================================================
-plot_figures_ADCP = 0;
-plot_figures_profils = 0;
-save_figure = 0;
+addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding'))
+%% Defines parameters that will affect the outcome of the processing
+plot_figures_ADCP = 1; % Shows figures with ADCP velocites
+plot_figures_profils = 1; % Shows figures of the geostrophic velocity
+save_figure = 0; % Saves the figure as a PNG
 
-save_vabs = 0;
-save_trsp = 0;
+save_vabs = 0; % Saves the absolute velocity
+save_trsp = 0; % Saves transport
 
-% choix du fichier ctd
-fctd = '../../DATA/HYDRO/RREX2017/ctd/nc/rr17_PRES.nc';
+% Defines the hydrography data location
+fctd = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_Hydro2017/ctd/nc/rr17_PRES.nc';
 
-% CHOIX DE LA SECTION parmi les section='south','ovide', north', 'ride'
+% You can choose the transect ='south','ovide', north', 'ride'
 section='ride'; display(['section ' section]);
 
-% Execution de la correction spe aux zones de fractures CGFZ/BFZ ou non
-corr=1;
-
-corr_internal_wave = 0; %si vref moyen pour presence onde interne
-
+corr=1; % Correction for fracture zones (CGFZ/BFZ)
+corr_internal_wave = 0; % Correction for internal waves
 manual_REF = 1;
-
 methode = 'no_bottom'; %'pfit' (fit a plane), 'polyfit' (fit a polynomial), 'cstslope' (constant slope), 'horiz' (horizontal extrapolation)
-
 bottom_v = 0;
-%% ========================================================================
+%% Defines the stations and variables according to the transect
 
 if strcmp(section,'north')
     titre='vitesses geostrophiques absolues RREX 2017 North Section';
     titre_fig = 'vitesses_geo_abs_rrex17_north';
     % definition des sections a traiter
-    STA = [44:55 57]; STA=STA(:); nsta=size(STA,1); npair=nsta-1;
-    
-    % titre et fichiers de sortie
+    STA = [44:55 57]; STA=STA(:); % Station numbers as a vector
+    nsta=size(STA,1); npair=nsta-1; % Number of sations pairs
+    % Title and output files
     tit='RREX 2017 North Section';
-    %file_save='/home4/homedir4/perso/isalaun/Matlab/matlab_output_RREX17/vitesse_adcp/vitesse_sadcp_RREX17_OS38_north_m09_004_12_fhv21_sec_02mx21';
-    file_save='../matlab_output_RREX17/vitesse_adcp/vitesse_sadcp_RREX17_OS38_north_m09_004_12_fhv21_sec_02mx21';
-    sign=-1;
-    % definition du signe de la vitesse orthogonale
-    % la convention est la meme que pour la vitesse geostrophique
-    % une vitesse positive indique une vitesse dirigÃ©e sur la droite de la
-    % section definie par le premier et dernier segment.
-    xref='lon'; % reference de l'absisse
+    file_save='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data\RREX/Ivane_output_RREX17/vitesse_adcp/vitesse_sadcp_RREX17_OS38_north_m09_004_12_fhv21_sec_02mx21';
+    sign=-1; % Sign convertion for velocity
+    % Definition of the sign of the orthogonal velocity
+    % The convention is the same as for the geostrophic velocity
+    % A positive velocity indicates a velocity directed to the right of the
+    % section defined by the first and last segments.
+    xref='lon'; % Reference for x axis
     
 elseif strcmp(section,'ovide')
     titre='vitesses geostrophiques absolues RREX 2017 Ovide Section';
     titre_fig = 'vitesses_geo_abs_rrex17_ovide';
-    %STA = [18:20 22:24 27:28 31:38 41:43]; STA=STA(:); nsta=size(STA,1); npair=nsta-1;
     STA = [18:20 22:24 27:28 43:-1:41 38:-1:31];STA=STA(:); nsta=size(STA,1); npair=nsta-1;
-    
     tit='RREX 2017 Ovide Section';
-    %file_save='/home4/homedir4/perso/isalaun/Matlab/matlab_output_RREX17/vitesse_adcp/vitesse_sadcp_RREX17_OS38_ovide_m09_004_12_fhv21_sec_02mx21';
-    file_save='../matlab_output_RREX17/vitesse_adcp/vitesse_sadcp_RREX17_OS38_ovide_m09_004_12_fhv21_sec_02mx21';
+    file_save='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data\RREX/Ivane_output_RREX17/vitesse_adcp/vitesse_sadcp_RREX17_OS38_ovide_m09_004_12_fhv21_sec_02mx21';
     sign_est=1; %attention une partie de la section +1 et une partie -1
     sign_ouest=1;
     
@@ -80,10 +68,8 @@ elseif strcmp(section,'ovide')
     titre='vitesses geostrophiques absolues RREX 2017 South Section';
     titre_fig = 'vitesses_geo_abs_rrex17_south';  
     STA = [1:8 11:17]; STA=STA(:); nsta=size(STA,1); npair=nsta-1;
-    
     tit='RREX 2017 South Section';
-    %file_save='/home4/homedir4/perso/isalaun/Matlab/matlab_output_RREX17/vitesse_adcp/vitesse_sadcp_RREX17_OS38_south_m09_004_12_fhv21_sec_02mx21';
-    file_save='../matlab_output_RREX17/vitesse_adcp/vitesse_sadcp_RREX17_OS38_south_m09_004_12_fhv21_sec_02mx21';
+    file_save='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data\RREX/Ivane_output_RREX17/vitesse_adcp//vitesse_sadcp_RREX17_OS38_south_m09_004_12_fhv21_sec_02mx21';
     sign=-1;
     xref='lon'; 
     
@@ -91,24 +77,29 @@ elseif strcmp(section,'ovide')
     titre='vitesses geostrophiques absolues RREX 2017 Reykjanes Ride Section'; 
     titre_fig = 'vitesses_geo_abs_rrex17_ride'; 
     STA = [56:69 76:125];STA=STA(:); nsta=size(STA,1); npair=nsta-1; 
-    
     tit='RREX 2017 Ride Section';
-    %file_save='/home4/homedir4/perso/isalaun/Matlab/matlab_output_RREX17/vitesse_adcp/vitesse_sadcp_RREX17_OS38_ride_m09_004_12_fhv21_sec_02mx21';
-    file_save='../matlab_output_RREX17/vitesse_adcp/vitesse_sadcp_RREX17_OS38_ride_m09_004_12_fhv21_sec_02mx21';
+    file_save='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data\RREX/Ivane_output_RREX17/vitesse_adcp/vitesse_sadcp_RREX17_OS38_ride_m09_004_12_fhv21_sec_02mx21';
     sign=-1;
     xref='lat'; 
  
 end
 
-
-%%% lecture des donnees sadcp 
+%%% reading of SADCP data 
 load(file_save,'u_sadcp','v_sadcp', 'vorth_sadcp', 'lat_sadcp', 'lon_sadcp', 'dpair', 'dist_inter_profil', 'z_adcp');
 z_adcp=abs(z_adcp);
 nsec=size(vorth_sadcp,1); nz=length(z_adcp);
+% u_sadcp	Eastward ADCP velocity
+% v_sadcp	Northward ADCP velocity
+% vorth_sadcp	Orthogonal velocity (perpendicular to section)
+% lat_sadcp, lon_sadcp	ADCP positions
+% dpair	Distance between station pairs
+% dist_inter_profil	Inter-station distance
+% z_adcp	ADCP depth levels
 
 %% ========================================================================
-%%% INTERPOLATION ET FILTRAGE DES DONNEES ADCP
-% Figure de la portée des ADCPs
+%%% Interpolation and filtering the ADCP data
+
+% Figure of raw ADCP data (orthogonal velocity)
 if plot_figures_ADCP == 1
     
 figure;
@@ -122,14 +113,14 @@ ylim([0 1500]);
 
 end
 
-% Boucher les trous en surface dans les donnees vorth_sadcp
+% Fills surface gaps in the velocity transect with the value closes to surface
 vorth_sadcp_good=~isnan(vorth_sadcp);
-[i,j]=find(vorth_sadcp_good,1,'first');
+[i,j]=find(vorth_sadcp_good,1,'first'); % finds first "good" data point
 for i=1:nsec
     
-    j=find(vorth_sadcp_good(i,:),1,'first');
+    j=find(vorth_sadcp_good(i,:),1,'first'); % First good depth for this section
     if j~= 1
-    vorth_sadcp(i,1:j-1)=vorth_sadcp(i,j);
+    vorth_sadcp(i,1:j-1)=vorth_sadcp(i,j); % Fill surface NaNs with first good value
     end
     
 end
@@ -149,11 +140,11 @@ ylim([0 1500]);
 end
 
 % pour les valeurs a NaN interpolation (un NaN pair 518 ride RREX 2017)
-isec_bad=isnan(vorth_sadcp(:,1)); isec_bad=find(isec_bad); 
+isec_bad=isnan(vorth_sadcp(:,1)); % Find sections with NaN at first depth
+isec_bad=find(isec_bad); % Get indices of bad sections
 
-for i=1:size(isec_bad)
-        vorth_sadcp(isec_bad(i),:)=0.5*(vorth_sadcp(isec_bad(i)-1,:)+vorth_sadcp(isec_bad(i)+1,:));    
-end
+% Interpolates with the average of the surrounding values
+vorth_sadcp(isec_bad,:)=0.5*(vorth_sadcp(isec_bad-1,:)+vorth_sadcp(isec_bad+1,:));    
 
 % Figure de la porté des ADCPs
 if plot_figures_ADCP == 1
@@ -168,16 +159,14 @@ set(gca,'XDir','reverse');
 ylim([0 1500]);
 
 end
-%close all
-% Question: modifier si ADCP OS150
 
-% Interpolation des donnees SADCP sur une mm grille verticale (pas=5m) 
-z_keep = [0 1200];
-z_grid = [55:5:z_keep(2)];  % z_grid(1) doit etre ajuste de maniere a  etre a une profondeur superieure au premier niveau sadcp valide sinon le filtre de lanczos propage les nan
-z_interp = z_adcp(z_adcp <= z_keep(2) & z_adcp >= z_keep(1));
+% Interpolation in a regular 5 meter vertical grid (pas=5m) 
+z_keep = [0 1200]; % depth range
+z_grid = [55:5:z_keep(2)];  % z_grid(1) must be deeper than first valid ADCP level otherwise Lanczos filter propagates NaNs
+z_interp = z_adcp(z_adcp <= z_keep(2) & z_adcp >= z_keep(1)); % Original depth in range
 
-Vorth_OS38 = vorth_sadcp(:,z_adcp <= z_keep(2) & z_adcp >= z_keep(1)); 
-Vinterp1 = interp1(z_interp,Vorth_OS38',z_grid); 
+Vorth_OS38 = vorth_sadcp(:,z_adcp <= z_keep(2) & z_adcp >= z_keep(1)); %  Extract data only within 0-1200m depth range
+Vinterp1 = interp1(z_interp,Vorth_OS38',z_grid); % Interpolation to new grid
 
 if plot_figures_ADCP == 1
     
@@ -191,17 +180,26 @@ set(gca,'XDir','reverse');
 ylim([0 1500]);
 
 end
-%% ------------------------------------------------------------------------
+%% Applies Lanczos filter in both vertical and horizontal direction
 % Filtrage de Lanczos des donnees sur la verticale (400m):
-vorth_filt_vert = NaN(length(z_grid),nsec);
+
+vorth_filt_vert = NaN(length(z_grid),nsec); % variable for vertically filtered v
 
 for i=1:nsec    
-    ind_nan = isnan(Vinterp1(:,i)); ind_nan_un = find(ind_nan ==1); ind_ok = ind_nan_un(1)-1;
-    
-    if ind_ok<80 np=round(ind_ok/2); else np=40; end
-    
-    vorth_filt_vert(1:ind_ok,i) = lanczos(Vinterp1(1:ind_ok,i),0.002,np);
-    
+    ind_nan = isnan(Vinterp1(:,i)); % find NaN location
+    ind_nan_un = find(ind_nan ==1); % Get indices of NaNs
+    ind_ok = ind_nan_un(1)-1; % Last good depth index
+    if ind_ok<80
+        np=round(ind_ok/2); % Shallow station: shorter filter
+    else
+        np=40; % Deep station: 40 length filter
+    end
+    vorth_filt_vert(1:ind_ok,i) = lanczos(Vinterp1(1:ind_ok,i)',0.002,np); % Applies filter
+    % lanczos.m function only accepts row vectors [1, n]
+    % What does 0.002 cycles/m mean?
+    % Corresponds to a wavelength of 1/0.002 = 500 meters
+    % Removes features shorter than ~500m vertically
+    % Preserves large-scale vertical structure
 end
 
 vorth_filt_vert = vorth_filt_vert'; z_adcp = z_grid; Vinterp1 = Vinterp1';
@@ -218,10 +216,9 @@ set(gca,'XDir','reverse');
 ylim([0 1500]);
 end
 
-% Filtrage de Lanczos sur l'horizontal (8km):  
-
+% Horizontal filtering of velocity (8km):  
 for i=1:nz   
-    vorth_filt_horiz(:,i) = lanczos(vorth_filt_vert(:,i),0.04,10);      
+    vorth_filt_horiz(:,i) = lanczos(vorth_filt_vert(:,i)',0.04,10);      
 end
 
 if plot_figures_ADCP == 1
@@ -237,36 +234,39 @@ end
 
 %close all
 
-vorth_use = vorth_filt_horiz; %Utilisé comme vitesse ref..
+vorth_use = vorth_filt_horiz; % Utilized as reference velocity
 plot_compare_filt_horiz = 0;
 %Vinterp1 (sans filtrage) vorth_filt_vert (filtre de Lanczos vertical) 
 % ou vorth_filt_horiz (filtre de Lanczos vertical+horizontal)
 
-%% ------------------------------------------------------------------------
+%% Determines the reference velocity from SADCP between stations
 %%% DETERMINATION DE VREF ET MOYENNE DES DONNEES SADCP ENTRE DEUX STATIONS HYDROLOGIQUES
 
+% Defines lat and lon of stations (STA)
 lon_ctd = ncload(fctd,'LONGITUDE'); lon_ctd = lon_ctd(2:end); lon_ctd = lon_ctd(STA);
 lat_ctd = ncload(fctd,'LATITUDE'); lat_ctd = lat_ctd(2:end); lat_ctd = lat_ctd(STA);
 
 % Definition de la couche de reference (fonction de la puissance du ADCP)
 z_ref = [250;1000]; %OS38 985m!
 %z_ref = [600;1000];
-ep = z_ref(2)-z_ref(1);
+ep = z_ref(2)-z_ref(1);% Layer thickness
 
 z_ref_det = NaN(nsec,2); %couche ref determine pour chaque profil adcp
 
-for isec=1:nsec
+for isec=1:nsec % Makes cycle for all ADCP measurements in the transect
     
-    ind_nan = isnan(vorth_use(isec,:)); ind_nan_un = find(ind_nan ==1); ind_fond = ind_nan_un(1);
-    z_fond = round(z_adcp(ind_fond))
+    ind_nan = isnan(vorth_use(isec,:)); ind_nan_un = find(ind_nan ==1);
+    ind_fond = ind_nan_un(1); % Defines the "bottom" of the ADCP measure 
+    z_fond = round(z_adcp(ind_fond));
     
-    if z_fond>=z_ref(2)
+    % This is for defining the reference depth depending on the "bottom"
+    if z_fond>=z_ref(2) % Deep station
         z_ref_det(isec,:) = z_ref; %assez profond pour choisir 250m-1000m comme couche ref   
-    elseif z_fond<=z_ref(2) && z_fond>ep+150
+    elseif z_fond<=z_ref(2) && z_fond>ep+150 % Medium depth (400 m layer)
         z_ref_det(isec,:) = [z_fond-ep+50;z_fond-50]; %moins profond on prend une couche de 400m moins profonde que 500m-900m mais plus profonde que 200 pour eviter ageo
-    elseif z_fond<=ep+150 && z_fond>100
+    elseif z_fond<=ep+150 && z_fond>100 % Shallow
         z_ref_det(isec,:) = [100;z_fond-50]; %pas assez profond on prend une couche moins epaisse
-    else
+    else % Very shallow
         z_ref_det(isec,:) = [50;z_fond-10]; %tres peu profond on prend une fine couche en surface
     end
     
@@ -274,28 +274,35 @@ for isec=1:nsec
 end
 
 
-%Determination de la couche ref commune entre STA
+%Determines a common reference depth between stations
 z_vref_use_pair=NaN(npair,2); z_vref_use=NaN(nsec,2);
 
-for i=1:npair
+for i=1:npair % Makes a cycle for every station pair
     
-    if strcmp(section,'ride'); 
-        ok = lat_sadcp <= lat_ctd(i) & lat_sadcp >= lat_ctd(i+1);
+    if strcmp(section,'ride') % Determines the positions acordding to the transect
+        ok = lat_sadcp <= lat_ctd(i) & lat_sadcp >= lat_ctd(i+1); % Matching ADCP to station pairs
         
-    elseif strcmp(section,'south') || strcmp(section,'north');
+    elseif strcmp(section,'south') || strcmp(section,'north')
         ok = lon_sadcp >= lon_ctd(i) & lon_sadcp <= lon_ctd(i+1);
         
-    elseif strcmp(section,'ovide');
+    elseif strcmp(section,'ovide')
         ok = lon_sadcp <= lon_ctd(i) & lon_sadcp >= lon_ctd(i+1);   
     end
         
-    sup_sec = nanmin(z_ref_det(ok,1)); if isempty(sup_sec) sup_sec = NaN; end
-    inf_sec = nanmin(z_ref_det(ok,2)); if isempty(inf_sec) inf_sec = NaN; end
+    sup_sec = nanmin(z_ref_det(ok,1)); % Minimum upper bound
+    if isempty(sup_sec)
+        sup_sec = NaN;
+    end
+
+    inf_sec = nanmin(z_ref_det(ok,2)); % Minimum lower bound
+    if isempty(inf_sec)
+        inf_sec = NaN;
+    end
      
-    z_vref_use_pair(i,:) = [sup_sec,inf_sec];
+    z_vref_use_pair(i,:) = [sup_sec,inf_sec]; % This is the ref depth to use for station pairs
     
-    z_vref_use(find(ok==1),1) = sup_sec;
-    z_vref_use(find(ok==1),2) = inf_sec;
+    z_vref_use(ok==1,1) = sup_sec;
+    z_vref_use(ok==1,2) = inf_sec;
 end
 
 
@@ -317,56 +324,50 @@ end
 
 
 if plot_figures_ADCP == 1
-figure;
-pcolor(repmat([1:nsec]',1,size(vorth_use,2)),repmat(z_adcp,size(vorth_use,1),1),vorth_use)
-title('couche de reference avant correction');
-hold on;
-shading flat;
-set(gca,'YDir','reverse');
-set(gca,'XDir','reverse');
-
-plot([1:nsec],z_vref_use(:,1),'r--','LineWidth',1)
-plot([1:nsec],z_vref_use(:,2),'k--','LineWidth',1)
-
+    figure;
+    pcolor(repmat([1:nsec]',1,size(vorth_use,2)),repmat(z_adcp,size(vorth_use,1),1),vorth_use)
+    title('couche de reference avant correction');
+    hold on;
+    shading flat;
+    set(gca,'YDir','reverse');
+    set(gca,'XDir','reverse');
+    plot([1:nsec],z_vref_use(:,1),'r--','LineWidth',1)
+    plot([1:nsec],z_vref_use(:,2),'k--','LineWidth',1)
 end
 
 if manual_REF == 1
-    
-for i=1:npair
-    
-    if strcmp(section,'ride'); 
-        ok = lat_sadcp <= lat_ctd(i) & lat_sadcp >= lat_ctd(i+1);
-        
-    if i==1; %pair 56
-    z_vref_use_pair(i,:) = [60,70];    
-    z_vref_use(find(ok==1),1) = 60;
-    z_vref_use(find(ok==1),2) = 70;        
-%     elseif i==35 || i==36 || i==37; %paires 96 97 98
-%     z_vref_use_pair(i,:) = [270,870];    
-%     z_vref_use(find(ok==1),1) = 270;
-%     z_vref_use(find(ok==1),2) = 870;
-%     elseif i==39 || i==40 || i==41; %paires 100 101 102
-%     z_vref_use_pair(i,:) = [200,900];    
-%     z_vref_use(find(ok==1),1) = 200;
-%     z_vref_use(find(ok==1),2) = 900;    
-%     elseif i== 43; %paire 104
-%     z_vref_use_pair(i,:) = [250,950];    
-%     z_vref_use(find(ok==1),1) = 250;
-%     z_vref_use(find(ok==1),2) = 950; 
-    elseif i==57 %pair 118
-    z_vref_use_pair(i,:) = [250,750];    
-    z_vref_use(find(ok==1),1) = 250;
-    z_vref_use(find(ok==1),2) = 750;
-        
+    for i=1:npair
+        if strcmp(section,'ride'); 
+            ok = lat_sadcp <= lat_ctd(i) & lat_sadcp >= lat_ctd(i+1);        
+        if i==1 %pair 56
+            z_vref_use_pair(i,:) = [60,70];    
+            z_vref_use(find(ok==1),1) = 60;
+            z_vref_use(find(ok==1),2) = 70;        
+%           elseif i==35 || i==36 || i==37; %paires 96 97 98
+%           z_vref_use_pair(i,:) = [270,870];    
+%           z_vref_use(find(ok==1),1) = 270;
+%           z_vref_use(find(ok==1),2) = 870;
+%           elseif i==39 || i==40 || i==41; %paires 100 101 102
+%           z_vref_use_pair(i,:) = [200,900];    
+%           z_vref_use(find(ok==1),1) = 200;
+%           z_vref_use(find(ok==1),2) = 900;    
+%           elseif i== 43; %paire 104
+%           z_vref_use_pair(i,:) = [250,950];    
+%           z_vref_use(find(ok==1),1) = 250;
+%           z_vref_use(find(ok==1),2) = 950; 
+        elseif i==57 %pair 118
+            z_vref_use_pair(i,:) = [250,750];    
+            z_vref_use(find(ok==1),1) = 250;
+            z_vref_use(find(ok==1),2) = 750;    
     end
     
-    elseif strcmp(section,'north');
+    elseif strcmp(section,'north')
         ok = lon_sadcp >= lon_ctd(i) & lon_sadcp <= lon_ctd(i+1);
         
-    elseif strcmp(section,'south');
+    elseif strcmp(section,'south')
         ok = lon_sadcp >= lon_ctd(i) & lon_sadcp <= lon_ctd(i+1);
           
-    elseif strcmp(section,'ovide');
+    elseif strcmp(section,'ovide')
         ok = lon_sadcp <= lon_ctd(i) & lon_sadcp >= lon_ctd(i+1);   
     end
 end    
@@ -380,10 +381,8 @@ hold on;
 shading flat;
 set(gca,'YDir','reverse');
 set(gca,'XDir','reverse');
-
 plot([1:nsec],z_vref_use(:,1),'r--','LineWidth',1)
 plot([1:nsec],z_vref_use(:,2),'k--','LineWidth',1)
-
 end   
 
 end
@@ -392,32 +391,30 @@ end
 
 for isec=1:nsec
     
-        v_ref(isec) = meanoutnan(vorth_use(isec,z_adcp <= z_vref_use(isec,2) & z_adcp >= z_vref_use(isec,1)));     
-        v_ref_nf(isec) = meanoutnan(Vinterp1(isec,z_adcp <= z_vref_use(isec,2) & z_adcp >= z_vref_use(isec,1)));
-        
-        v_ref_filt(isec) = meanoutnan(vorth_filt_horiz(isec,z_adcp <= z_vref_use(isec,2) & z_adcp >= z_vref_use(isec,1)));
-        
+        v_ref(isec) = meanoutnan(vorth_use(isec,z_adcp <= z_vref_use(isec,2) & z_adcp >= z_vref_use(isec,1))); % filtered ADCP   
+        v_ref_nf(isec) = meanoutnan(Vinterp1(isec,z_adcp <= z_vref_use(isec,2) & z_adcp >= z_vref_use(isec,1))); % unfiltered ADCP
+        v_ref_filt(isec) = meanoutnan(vorth_filt_horiz(isec,z_adcp <= z_vref_use(isec,2) & z_adcp >= z_vref_use(isec,1))); % horizontally filtered ADCP
         iok = find(z_adcp <= z_vref_use(isec,2) & z_adcp >= z_vref_use(isec,1));
         
-%         if plot_figures_profils == 1
-%         figure;
-%         hold on;
-%         plot(Vinterp1(isec,:),-z_adcp,'g','LineWidth',1) %profil ADCP non filtré sur la verticale
-%         plot([v_ref_nf(isec) v_ref_nf(isec)],-[z_adcp(iok(1)) z_adcp(iok(end))],'g--','LineWidth',1)
-%         plot(vorth_use(isec,:),-z_adcp,'k','LineWidth',1.5) %profil ADCP filtré sur la verticale
-%         %plot(vorth_use(isec,iok),-z_adcp(iok),'r','LineWidth',1.5) %profil ADCP filtré sur la verticale couche ref
-%         plot([v_ref(isec) v_ref(isec)],-[z_adcp(iok(1)) z_adcp(iok(end))],'r--','LineWidth',1) %profil ADCP moyenne dans la couche ref
-%         
-%         
-%         plot([v_ref(isec)-0.1 v_ref(isec)+0.1],[-z_vref_use(isec,1) -z_vref_use(isec,1)],'k--','LineWidth',0.5)
-%         plot([v_ref(isec)-0.1 v_ref(isec)+0.1],[-z_vref_use(isec,2) -z_vref_use(isec,2)],'k--','LineWidth',0.5)       
-%         
-%         if save_figure == 1;
-%             saveas(gcf, ['../figures/prof_vSADCP_vgeo_RREX17/prof_vSADCP_ref_' section '_' num2str(isec) '_filtre400m_RREX17.png'])
-%         end
-%         %pause
-%         close all
-%         end
+        % if plot_figures_profils == 1
+        % figure;
+        % hold on;
+        % plot(Vinterp1(isec,:),-z_adcp,'g','LineWidth',1) %profil ADCP non filtré sur la verticale
+        % plot([v_ref_nf(isec) v_ref_nf(isec)],-[z_adcp(iok(1)) z_adcp(iok(end))],'g--','LineWidth',1)
+        % plot(vorth_use(isec,:),-z_adcp,'k','LineWidth',1.5) %profil ADCP filtré sur la verticale
+        % %plot(vorth_use(isec,iok),-z_adcp(iok),'r','LineWidth',1.5) %profil ADCP filtré sur la verticale couche ref
+        % plot([v_ref(isec) v_ref(isec)],-[z_adcp(iok(1)) z_adcp(iok(end))],'r--','LineWidth',1) %profil ADCP moyenne dans la couche ref
+        % 
+        % 
+        % plot([v_ref(isec)-0.1 v_ref(isec)+0.1],[-z_vref_use(isec,1) -z_vref_use(isec,1)],'k--','LineWidth',0.5)
+        % plot([v_ref(isec)-0.1 v_ref(isec)+0.1],[-z_vref_use(isec,2) -z_vref_use(isec,2)],'k--','LineWidth',0.5)       
+        % 
+        % if save_figure == 1;
+        %     saveas(gcf, ['../figures/prof_vSADCP_vgeo_RREX17/prof_vSADCP_ref_' section '_' num2str(isec) '_filtre400m_RREX17.png'])
+        % end
+        % %pause
+        % close all
+        % end
 
 end
 
@@ -430,7 +427,7 @@ v_ref = v_ref'; v_ref_filt = v_ref_filt';
 v_filt_vert_moy = NaN(npair,length(z_grid));
 v_no_filt_vert_moy = NaN(npair,length(z_grid));
 
-for i=1:npair
+for i=1:npair % Averaging between stations
     
     if strcmp(section,'ride'); 
         ok = lat_sadcp <= lat_ctd(i) & lat_sadcp >= lat_ctd(i+1);
@@ -442,7 +439,7 @@ for i=1:npair
         ok = lon_sadcp <= lon_ctd(i) & lon_sadcp >= lon_ctd(i+1);   
     end   
     
-    v_ref_moy(i) = meanoutnan(v_ref(ok));
+    v_ref_moy(i) = meanoutnan(v_ref(ok)); % Average between 2 stations
     v_ref_filt_horiz_moy(i) = meanoutnan(v_ref_filt(ok));
     %v_ref_filt_horiz_after_moy(i) = meanoutnan(v_ref_filt_after(ok));
     
@@ -468,61 +465,61 @@ plot((lat_ctd(1:end-1)+lat_ctd(2:end))/2,v_ref_filt_horiz_moy,'g')
 end
 %close all
 %--------------------------------------------------------------------------
-%% CALAGE DU PROFIL GEOSTROPHIQUE SUR LA VITESSE SADCP  DANS LA COUCHE DE REFERENCE SELECTIONNEE
+%% Calculates geostrophic velocity using reference SADCP velocity
+%  CALAGE DU PROFIL GEOSTROPHIQUE SUR LA VITESSE SADCP  DANS LA COUCHE DE REFERENCE SELECTIONNEE
 %%% Ajout d'une vitesse de reference aux vitesses geostrophiques
 % lecture du fichier vitesse geostrophique
 dpair=[]; v=[]; z=[]; zref=[]; lat=[]; lon=[]; ref_up_bott_tr=[]; ref_d_bott_tr=[];
 
-for i=1:npair
-    fic_vgeo = ['vitesse_geo/vgeo_' section '_' methode '_' num2str(STA(i),'%3.3d') '_' num2str(STA(i+1),'%3.3d')];
-    %load(['/home4/homedir4/perso/isalaun/Matlab/matlab_output_RREX17/' fic_vgeo '.mat'],'dpair_geo','vgeo', 'zl', 'refc','lat_geo','lon_geo','ref_up_bott_triangle');
-    load(['../matlab_output_RREX17/' fic_vgeo '.mat'],'dpair_geo','vgeo', 'zl', 'refc','lat_geo','lon_geo','ref_up_bott_triangle');
-    dpair=[dpair dpair_geo]; v=[v vgeo]; z=[z zl]; zref=[zref refc]; lat=[lat lat_geo]; lon=[lon lon_geo]; ref_up_bott_tr = [ref_up_bott_tr ref_up_bott_triangle];
-    
-    if bottom_v == 1;
-        load(['../matlab_output_RREX17/' fic_vgeo '.mat'],'ref_d_bott_triangle');
+for i=1:npair % Loads the raw geostrophic velocity for each stations pairs 
+    fic_vgeo = ['C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/vitesse_geo/vgeo_' section '_' methode '_' num2str(STA(i),'%3.3d') '_' num2str(STA(i+1),'%3.3d')];
+    load([fic_vgeo '.mat'],'dpair_geo','vgeo', 'zl', 'refc','lat_geo','lon_geo','ref_up_bott_triangle');
+    dpair=[dpair dpair_geo]; v=[v vgeo]; z=[z zl]; zref=[zref refc];
+    lat=[lat lat_geo]; lon=[lon lon_geo];
+    ref_up_bott_tr = [ref_up_bott_tr ref_up_bott_triangle];
+    if bottom_v == 1
+        load([fic_vgeo '.mat'],'ref_d_bott_triangle');
         ref_d_bott_tr = [ref_d_bott_tr ref_d_bott_triangle];
     end    
-end;
+end
 
-% correction du signe de la vitesse
-
-if strcmp(section,'ride') || strcmp(section,'south') || strcmp(section,'north');
+% Changes the sign (direction) depending on the transect
+if strcmp(section,'ride') || strcmp(section,'south') || strcmp(section,'north')
     v=sign*v;
-elseif strcmp(section,'ovide');
+elseif strcmp(section,'ovide')
     v(:,1:7)=sign_est*v(:,1:7);
     v(:,8:end)=sign_ouest*v(:,8:end);
 end
 
     
-% on passe les tableaux de sortie en vecteur ligne. v et z de
-% dimension (nz_geo,npair). zat profil avec valeur maximum de z
+% The output arrays are passed as row vectors v and z of
+% dimension (nz_geo,npair). zat profile with maximum value of z
 dpair=dpair(:); lat=lat(:); lon=lon(:); zref=zref(:);
 zl = NaN*ones(length(z),npair);
 for i=1:npair
-    ind_nan = find(isnan(v(:,i))==1);
-    if isempty(ind_nan); 
+    ind_nan = isnan(v(:,i));
+    if isempty(ind_nan)
         zl(:,i)=z(1:size(v,1));
     else
-        zl(1:ind_nan(1)-1,i)=z(1:ind_nan(1)-1); 
+        zl(1:ind_nan(1)-1,i)=z(1:ind_nan(1)-1); % Contains valid depths
     end
 end
-[zm,k]=max(zl,[],1);[~,l]=max(zm); zat=z(:,l);
+[zm,k]=max(zl,[],1);[~,l]=max(zm); zat=z(:,l); 
 
     
- %%% Valeur de reference utilisee pour contraindre les donnees SADCP 
- % pas d'interpolation pour les donnees moyennees avec "station" car latitude proche
+ %%% Reference value used to constrain the SADCP data 
+ % No interpolation for data averaged by 'station' as the latitude is close
  v_ref1 = v_ref_moy; lref1=z_vref_use_pair;
  
- if strcmp(xref,'lat');
+ if strcmp(xref,'lat')
      xlab='Latitude (°N)'; X1=lat;
- elseif strcmp(xref,'lon');
+ elseif strcmp(xref,'lon')
      xlab='Longitude (°E)'; X1=lon;
  end
 
  
-%%% on utilise un v_ref1 moyen commun pour les stations proches aux zones de fractures (attenuer le bruit ageo)
-if corr==1 & strcmp(section,'ride');
+%%% A common average v_ref1 value is used for stations located near fracture zones (to reduce geodynamic noise)
+if corr==1 & strcmp(section,'ride')
     moy_BFZ = meanoutnan(v_ref1(25:29)); % Profil geo et ADCP proche a la paire 30: profils pas perturbe de la BFZ   
     moy_CGFZ = meanoutnan([v_ref1(46) v_ref1(48)]);
     v_ref1 = [v_ref1(1:24)' repmat(moy_BFZ,1,5) v_ref1(30:46)' repmat(moy_CGFZ,1,1) v_ref1(48:end)'];
@@ -537,8 +534,8 @@ if corr==1 & strcmp(section,'ride');
     lref1(:,2) = [lref1(1:24,2)' repmat(Z_BFZ,1,5) lref1(30:46,2)' repmat(Z_CGFZ,1,1) lref1(48:end,2)'];
 end
 
-%%% on utilise un v_ref1 moyen commun pour les stations présence onde interne
-if corr_internal_wave ==1 & strcmp(section,'ride');
+%%% A common average v_ref1 is used for the internal wave presence stations
+if corr_internal_wave ==1 & strcmp(section,'ride')
     v_ref1 = v_ref1';
     
     moy_97 = meanoutnan(v_ref1(35:37));   
@@ -555,83 +552,73 @@ if corr_internal_wave ==1 & strcmp(section,'ride');
     lref1(:,2) = [lref1(1:34,2)' repmat(Z_97,1,3) lref1(38,2)' repmat(Z_101,1,3) lref1(42:end,2)'];
 end
 
-%------------------------------------------------------------------------------------------------------------------
-%%% Forcage de la vitesse geo par la vitesse adcp de ref
+% Overriding the geo speed with the reference ADCP speed
+    % What this does mathematically:
+    % v_absolute(z) = v_geostrophic(z) - <v_geostrophic>_ref + v_ADCP_ref
+    % Where:
+    % - <v_geostrophic>_ref = average geostrophic shear in reference layer
+    % - v_ADCP_ref = ADCP-measured velocity in reference layer
+    % Example: If geostrophic shear in 250-1000m is 0.1 m/s and ADCP says 0.05 m/s, subtract 0.05 m/s from entire profile.
+
 v_barocline = NaN*ones(length(z),npair);
  for i=1:npair
-     
-    % selectionne Zctd le plus proche de Zadcp moy [z_vref(1) z_vref(2)] et son indice J
-    % on retire la vitesse geo MOYENNE dans la couche de
-    % ref et on la remplace par la vitesse ADCP moyenne 
+    % Select the Zctd closest to the average Zadcp [z_vref(1) z_vref(2)] and its J index
+    % Remove the AVERAGE geostationary speed from the
+    % reference layer and replace it with the average ADCP speed 
     [~,Jmin] = min(abs(z(~isnan(v(:,i)),i)-lref1(i,1)));
     [~,Jmax] = min(abs(z(~isnan(v(:,i)),i)-lref1(i,2)));
-    
-    if ~isempty(Jmin) && ~isempty(Jmax); v(1:end,i) = v(1:end,i) - (nanmean(v(Jmin:Jmax,i))) + v_ref1(i); end;
-    %calcul de la composante barocline (vref=0 dans la couche REF)
-    
-    if ~isempty(Jmin) && ~isempty(Jmax); v_barocline(1:end,i) = v(1:end,i) - (nanmean(v(Jmin:Jmax,i))); end;
-    
+    if ~isempty(Jmin) && ~isempty(Jmax)
+        % Shift geostrophic profile to match ADCP reference
+        v(1:end,i) = v(1:end,i) - (nanmean(v(Jmin:Jmax,i))) + v_ref1(i);
+        % Baroclinic component (reference removed)
+        v_barocline(1:end,i) = v(1:end,i) - (nanmean(v(Jmin:Jmax,i)));
+    end
  end
-%% ========================================================================
-if bottom_v == 1;
 
-for ipair=1:npair
-    e = length(v(ref_up_bott_tr(ipair):ref_d_bott_tr(ipair),ipair))-1;
-    e = v(ref_up_bott_tr(ipair),ipair)/e;
-    v_bottom = 0:e:v(ref_up_bott_tr(ipair),ipair); 
-    %v_bottom = reverse(v_bottom);
-    v_bottom = flip(v_bottom);
-    v(ref_up_bott_tr(ipair):ref_d_bott_tr(ipair),ipair)= v_bottom;
-end
-
+if bottom_v == 1
+    for ipair=1:npair
+        e = length(v(ref_up_bott_tr(ipair):ref_d_bott_tr(ipair),ipair))-1;
+        e = v(ref_up_bott_tr(ipair),ipair)/e;
+        v_bottom = 0:e:v(ref_up_bott_tr(ipair),ipair); 
+        % Linear interpolation to zero velocity at bottom
+        v_bottom = flip(v_bottom);
+        v(ref_up_bott_tr(ipair):ref_d_bott_tr(ipair),ipair)= v_bottom;
+    end
 end
 
 %% ========================================================================
-%profil geostrophique v zat STA force par OS38 Lref et filtrage
-%profil v_ref_moy filtrage vert Lanczos
+% Geostrophic v profile in the STA force field using OS38 Lref and filtering
+% V_ref_moy profile with Lanczos vertical filtering
 
 % Plot profils vitesses geo abs et v_ref
 
-if plot_figures_profils == 1;
-
-for ipair=1:npair
-
-z_ref = ref_up_bott_tr(ipair);   
-    
-figure;
-hold on;
-plot(v(1:z_ref,ipair),-z(1:z_ref,ipair),'r','LineWidth',1)
-plot(v(z_ref:end,ipair),-z(z_ref:end,ipair),'b','LineWidth',1)
-
-plot(v_filt_vert_moy_tot(ipair,:),-z_adcp,'k','LineWidth',1)
-
-plot([v_ref1(ipair) v_ref1(ipair)],[-lref1(ipair,1) -lref1(ipair,2)],'k--','LineWidth',1.5)
-
-plot([v_ref1(ipair)-0.02 v_ref1(ipair)+0.02],[-lref1(ipair,1) -lref1(ipair,1)],'k--','LineWidth',0.5)
-plot([v_ref1(ipair)-0.02 v_ref1(ipair)+0.02],[-lref1(ipair,2) -lref1(ipair,2)],'k--','LineWidth',0.5)
-
-title(['Pair ' num2str(STA(ipair))],'fontsize',8);
-
-xlabel('v_o_r_t_h_o (m.s^-^1)');
-ylabel('Depth (m)');
-%xlim([-0.2 0.2]);
-ax1 = gca; ax1.FontSize = 14;
-
-if save_figure == 1;
-    %saveas(gcf, ['/home4/homedir4/perso/isalaun/Matlab/figures/prof_vSADCP_vgeo/prof_vgeo_vSADCP_pair' num2str(STA(ipair)) 'filtre' num2str(filtre) 'm_RREX17.png'])
-    saveas(gcf, ['../figures/prof_vSADCP_vgeo_RREX17/prof_vgeo_' methode '_vSADCP_pair' num2str(STA(ipair)) '_filtre400m_RREX17.png'])
-end
-close all
-
-end
-
+if plot_figures_profils == 1
+    for ipair=1:npair
+        z_ref = ref_up_bott_tr(ipair);   
+        figure;
+        hold on;
+        plot(v(1:z_ref,ipair),-z(1:z_ref,ipair),'r','LineWidth',1)
+        plot(v(z_ref:end,ipair),-z(z_ref:end,ipair),'b','LineWidth',1)
+        plot(v_filt_vert_moy_tot(ipair,:),-z_adcp,'k','LineWidth',1)
+        plot([v_ref1(ipair) v_ref1(ipair)],[-lref1(ipair,1) -lref1(ipair,2)],'k--','LineWidth',1.5)
+        plot([v_ref1(ipair)-0.02 v_ref1(ipair)+0.02],[-lref1(ipair,1) -lref1(ipair,1)],'k--','LineWidth',0.5)
+        plot([v_ref1(ipair)-0.02 v_ref1(ipair)+0.02],[-lref1(ipair,2) -lref1(ipair,2)],'k--','LineWidth',0.5)
+        title(['Pair ' num2str(STA(ipair))],'fontsize',8);
+        xlabel('v_o_r_t_h_o (m.s^-^1)');
+        ylabel('Depth (m)');
+        ax1 = gca; ax1.FontSize = 14;
+        if save_figure == 1
+            saveas(gcf, ['C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/docs/figures/Ivane_RREX_output/vgeo2017/prof_vgeo_' methode '_vSADCP_pair' num2str(STA(ipair)) '_filtre400m_RREX17.png'])
+        end
+        close all
+    end
 end
 
 %% ========================================================================
 %Enregistrement de la vitesse absolue
 
 if save_vabs == 1
-    rept = '../matlab_output_RREX17/';
+    rept = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/';
     
     % generation du nom du fichier de sortie
     fic_vabs = ['vitesse_abs/OS38_section_' section '_' methode ];
@@ -646,25 +633,27 @@ end
 
 %calcul du transport
 
-if strcmp(section,'ride'); 
+if strcmp(section,'ride')
     X = lat_ctd;
-
-elseif strcmp(section,'south') || strcmp(section,'north')|| strcmp(section,'ovide') ; 
+elseif strcmp(section,'south') || strcmp(section,'north')|| strcmp(section,'ovide')
     X = lon_ctd;
 end
 
-%%% Transport surface-fond
-tr_z=trsp_geo_tp(v,zat,dpair);   tr_barocline=trsp_geo_tp(v_barocline,zat,dpair); 
-tr_z = tr_z*1e-06;               tr_barocline = tr_barocline*1e-06;
+% Transport surface-fond
+tr_z=trsp_geo_tp(v,zat,dpair); % Transport from absolute velocity
+tr_barocline=trsp_geo_tp(v_barocline,zat,dpair); 
+tr_z = tr_z*1e-06; % Convert to Sverdrups (1 Sv = 10 m³/s)
+tr_barocline = tr_barocline*1e-06;
 
-for i=1:npair; T_tot(i) = sum(tr_z(:,i)); end
-for i=1:npair; T_up_bott_tr(i) = sum(tr_z(1:ref_up_bott_tr(i),i)); end
-
-for i=1:npair; T_barocline(i) = sum(tr_barocline(:,i));  T_barotrope(i) = T_tot(i)-T_barocline(i); end
-
+for i=1:npair
+    T_tot(i) = sum(tr_z(:,i)); % Total transport
+    T_up_bott_tr(i) = sum(tr_z(1:ref_up_bott_tr(i),i)); % Transport above bottom triangle
+    T_barocline(i) = sum(tr_barocline(:,i)); % Baroclinic transport
+    T_barotrope(i) = T_tot(i)-T_barocline(i); % Barotropic transport
+end
 
 % Enregistrement du transport
-rept='../matlab_output_RREX17/transport_geo/';
+rept='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/transport_geo/';
 file_save=['transport_RREX17_' section '_' methode];
 if save_trsp == 1
     save([rept file_save],'X','T_tot','T_up_bott_tr','T_barocline','T_barotrope');
@@ -713,15 +702,14 @@ end
 %     v(ind_nan(1):end,i) = v(ind_nan(1)-1,i);
 % end
 % end
-if save_figure == 1
+if save_figure == 0
     
 figure;
 set(gcf,'PaperType','A4','PaperOrientation','landscape','PaperUnits','centimeters','PaperPosition',[1,1,24,18],'Posi',[185 0 1200 800]);
-%load mapcolor2; 
-%addpath('/home4/homedir4/perso/isalaun/Matlab/toolbox/my_colormap');
 load vmap0
 vcol=-.2:.02:.2;
-[c,h]=contourf(X1(:),zat(1:4339).*1e-3,v(1:4339,:),vcol);
+%[c,h]=contourf(X1(:),zat(1:4339).*1e-3,v(1:4339,:),vcol);
+pcolor(X1(:),zat(1:4339).*1e-3,v(1:4339,:)); shading interp;
 set(gca,'ydir','reverse')
 xlabel(xlab); ylabel('Depth (km)');
 limcol=[vcol(1) vcol(end)]; caxis(limcol); colormap(vmap); colorbar;
@@ -729,16 +717,16 @@ colormap(vmap); colorbar;
 hold on; 
 hold on; fill(X_bathy(:),bathy_ship,[0.5 0.5 0.5]);
 
-if strcmp(section,'ovide');
+if strcmp(section,'ovide')
     ylim([0 3.2]);
     xlim([-37 -27]);
-elseif strcmp(section,'south');
+elseif strcmp(section,'south')
     ylim([0 3.2]);
     xlim([-38.5 -31]);
-elseif strcmp(section,'north');
+elseif strcmp(section,'north')
     ylim([0 3]);
     xlim([-34 -20]);
-elseif strcmp(section,'ride');
+elseif strcmp(section,'ride')
     ylim([0 4.35]); 
     xlim([48 64]);
 end
@@ -747,15 +735,15 @@ end
 cbar = colorbar; 
 cbar.Label.String = 'm/s'
  
-% if strcmp(section,'ride'); 
-%     hold on; text(55,4.75,'(c) RREX 2017','FontWeight','bold','FontSize',12)
-% elseif strcmp(section,'north');
-%     hold on; text(-27.9,3.3,'(b) RREX 2017','FontWeight','bold','FontSize',12)
-% elseif strcmp(section,'ovide');
-%     hold on; text(-32.7,3.5,'(c) RREX 2017','FontWeight','bold','FontSize',12)
-% elseif strcmp(section,'south');
-%     hold on; text(-35.3,3.5,'(b) RREX 2017','FontWeight','bold','FontSize',12)
-% end
+if strcmp(section,'ride')
+    hold on; text(55,4.75,'(c) RREX 2017','FontWeight','bold','FontSize',12)
+elseif strcmp(section,'north')
+    hold on; text(-27.9,3.3,'(b) RREX 2017','FontWeight','bold','FontSize',12)
+elseif strcmp(section,'ovide')
+    hold on; text(-32.7,3.5,'(c) RREX 2017','FontWeight','bold','FontSize',12)
+elseif strcmp(section,'south')
+    hold on; text(-35.3,3.5,'(b) RREX 2017','FontWeight','bold','FontSize',12)
+end
 
 % Position des stations
 x_lim = [48 64];
@@ -764,13 +752,13 @@ if X_sta_pos(1) > X_sta_pos(end); X_sta_pos=flip(X_sta_pos); str_numero=flip(str
 posi=get(gca,'Posi');
 a2=axes('Posi',[posi(1) posi(2)+posi(4) posi(3) 0],'Color','none','FontSize',10);
 set(a2,'XLim',x_lim,'XTick',X_sta_pos,'XTickLabel',[],'YTick',[]);
-%A = num2str([]);
-%a2.XTickLabel = {A,str_numero(2,:),A,str_numero(4,:),A,str_numero(6,:),A,str_numero(8,:),A,str_numero(10,:),A,str_numero(12,:),A,A,A,A,A,A,A,str_numero(20,:),A,str_numero(22,:),A,str_numero(24,:),A,str_numero(26,:),A,str_numero(28,:)...
-%    A,str_numero(30,:),A,str_numero(32,:),A,str_numero(34,:),A,A,A,A,A,A,A,A,A,str_numero(44,:),A,str_numero(46,:),A,str_numero(48,:),A,str_numero(50,:),A,str_numero(52,:),A,str_numero(54,:)...
-%    A,str_numero(56,:),A,str_numero(58,:),A,str_numero(60,:),A,str_numero(62,:),A,A};
-%set(a2,'XaxisLocation','top');
+A = num2str([]);
+a2.XTickLabel = {A,str_numero(2,:),A,str_numero(4,:),A,str_numero(6,:),A,str_numero(8,:),A,str_numero(10,:),A,str_numero(12,:),A,A,A,A,A,A,A,str_numero(20,:),A,str_numero(22,:),A,str_numero(24,:),A,str_numero(26,:),A,str_numero(28,:)...
+   A,str_numero(30,:),A,str_numero(32,:),A,str_numero(34,:),A,A,A,A,A,A,A,A,A,str_numero(44,:),A,str_numero(46,:),A,str_numero(48,:),A,str_numero(50,:),A,str_numero(52,:),A,str_numero(54,:)...
+   A,str_numero(56,:),A,str_numero(58,:),A,str_numero(60,:),A,str_numero(62,:),A,A};
+set(a2,'XaxisLocation','top');
 
-    saveas(gcf, ['../figures/',titre_fig,'.png'])
+    % saveas(gcf, ['C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/docs/figures/Ivane_RREX_output/vgeo2017/',titre_fig,'.png'])
 end
 
 %% ========================================================================
