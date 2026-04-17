@@ -999,10 +999,10 @@ sgtitle('RREX South of Ridge Transect','FontSize',16, 'FontWeight', 'bold','Font
 
 % T-S Diagram of the water masses
 RREXWaterMasses(temp2015(:,a),sal2015(:,a),dens2015(:,a),oxy2015(:,a),'2015 South of Ridge')
-saveas(gcf,'13a.TSDiagram_SouthRidge.png')
+% saveas(gcf,'13a.TSDiagram_SouthRidge.png')
 
 RREXWaterMasses(temp2017(:,b),sal2017(:,b),dens2017(:,b),oxy2017(:,b),'2017 South of Ridge')
-saveas(gcf,'13b.TSDiagram_SouthRidge.png')
+% saveas(gcf,'13b.TSDiagram_SouthRidge.png')
 
 %% ADCP Data
 

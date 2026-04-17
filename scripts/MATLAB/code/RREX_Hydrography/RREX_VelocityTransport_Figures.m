@@ -8,6 +8,9 @@ set(0, 'DefaultAxesFontName', 'LMRoman17');
 set(0, 'DefaultAxesFontWeight', 'bold');
 load vmap % loads colormap
 vmap(29,:) = 0.97; % Changes the middle of the cbar so it can be less white
+path2015='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/vitesse_abs/';
+path2017='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/vitesse_abs/';
+
 
 % It is important to have access to:
 % 1) Absolute velocity (Vgeo corrected by SADCP data)
@@ -44,9 +47,10 @@ vmap(29,:) = 0.97; % Changes the middle of the cbar so it can be less white
 %% First lets define the transect and load the variables
 
 transect={'ride','south','ovide','north'};
-section=transect{4};
+section=transect{1};
 
-load(['OS38_section_' section '_polyfit.mat'])
+cruise='RREX 2017 ';
+load([path2017 'OS38_section_' section '_polyfit.mat'])
 [bathy_ship,X_bathy,Y_bathy]=bathy_bateau_17(section);
 
 if strcmp(section,'ride')
@@ -57,7 +61,7 @@ else
     xlab='Longitude (°E)';
 end
 
-cruise='RREX 2017 ';
+
 figtitle={'Reykjanes Ridge Transect','South Cross-Ridge Transect','OVIDE Transect','North West-Ridge Transect'};
 
 %% Fixes the bathymetry
@@ -119,6 +123,40 @@ elseif strcmp(section,'south')
 elseif strcmp(section,'ovide')
     title([cruise figtitle{3} ' Geostrophic Velocity'],'FontSize',15)
     figname=fullfile(figpath, '03.Vgeo2017_ovide.png');
+elseif strcmp(section,'north')
+    title([cruise figtitle{4} ' Geostrophic Velocity'],'FontSize',15)
+    figname=fullfile(figpath, '04.Vgeo2017_north.png');
+end
+
+set(gca, 'LooseInset', get(gca, 'TightInset'));
+print(gcf,figname, '-dpng', '-r0', '-loose')
+
+%% The same but for RREX2015
+
+cruise='RREX 2015 ';
+load([path2015 'OS38_section_' section '_polyfit.mat'])
+
+figure()
+set(gcf, 'Position', [185, 0, 1200, 800]);
+vcol=-0.2:0.02:0.2;
+hold on
+pcolor(xaxis,z_abs*1e-3,v_abs); shading interp;
+contour(xaxis,z_abs*1e-3,v_abs,[0, 0],'Linecolor',[0.35 0.35 0.35],'LineWidth',1.8);
+set(gca,'ydir','reverse')
+xlabel(xlab); ylabel('Depth (km)');
+colorbar; colormap(vmap);
+limcol=[vcol(1) vcol(end)]; clim(limcol); 
+fill(X_bathy(:),bathy_ship,[0.5 0.5 0.5]);
+ylim([0 4.5])
+if strcmp(section,'ride')
+    title([cruise figtitle{1} ' Geostrophic Velocity'],'FontSize',15)
+    figname=fullfile(figpath, '01Vgeo2015_ridge.png');
+elseif strcmp(section,'south')
+    title([cruise figtitle{2} ' Geostrophic Velocity'],'FontSize',15)
+    figname=fullfile(figpath, '02.Vgeo2015_south.png');
+elseif strcmp(section,'ovide')
+    title([cruise figtitle{3} ' Geostrophic Velocity'],'FontSize',15)
+    figname=fullfile(figpath, '03.Vgeo2015_ovide.png');
 elseif strcmp(section,'north')
     title([cruise figtitle{4} ' Geostrophic Velocity'],'FontSize',15)
     figname=fullfile(figpath, '04.Vgeo2015_north.png');
