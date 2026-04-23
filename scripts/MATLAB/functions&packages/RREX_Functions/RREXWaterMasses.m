@@ -1,36 +1,36 @@
-function [T1i,T2i,dx, dz,bottomi] = RREXInterpolation(T1,x1,pres1,bottom1,T2,x2,pres2,bottom2,tit)
+function x = RREXWaterMasses(T,S,dens,oxy,tit)
+% This function is used for plotting the water mass concentration in a
+% T-S diagram
 
-% This function is used for interpolating 1 variable of both RREX
-% cruises using a common grid
+% I have to re-comment because i overwrotte this function by accident :p
 
 % INPUT
-%        T1:      Variable for RREX2015 (Temperature, Salinity, Oxygen...) [M x N] 
-%        T2:      Variable for RREX2017 (must be the same variable as T1)  [M x N]  
-%        x:       Spatial Coordinate (latitude or longitude) [N] 
-%        pres:    Pressure [M x N] 
-%        bottom:  Depth of the bottom [N]
-%        tit:     Title of the Figure
+%        T1:     
+%        T2:     
+%        x:      
+%        pres:   
+%        bottom: 
+%        tit:    
 
-% OUTPUT
-%        T1i:      Interpolated Variable for RREX2015  [Z x X] 
-%        T2i:      Interpolated Variable for RREX2017  [Z x X]  
-%        dx:       New Horizontal Cordinate [X] 
-%        dz:       New Pressure Cordinate [Z] 
-%        bottomi:  Interpolated Depth of the Bottom [X]
+%%
 
-%% Preparing the variables for interpolation
+NACW=dens<27.52 & S>34.94;
 
-% Finds the x coordinate that starts and ends the new dx variable
-aux1=min([min(x1),min(x2)]); aux2=max([max(x1),max(x2)]);
+SAW=dens<27.52 & S<34.94;
 
-% Makes a latitudinal vector with a step of 0.1deg
-dx=round(aux1,1):0.1:round(aux2,1);
+SAIW=dens>27.52 & dens<27.71 & S<34.94;
 
-% The same for the z axis (pressure)
-aux3=[max(max(pres1)),max(max(pres2))];
+IW=dens>27.52 & dens<27.71 & S>34.94 & oxy < 272;
 
-% Makes a depth vector with a step of 1 dbar
-dz=0:1:aux3;
+SPMW=dens>27.52 & dens<27.71 & S>34.94 & oxy > 272;
+
+LSW=dens>27.71 & dens<27.8 & S<34.94;
+
+ISW=dens>27.71 & dens<27.8 & S>34.94;
+
+LDW=dens>27.8 & S<34.94;
+
+ISOW=dens>27.8 & S>34.94;
 
 %% Make the water mass index a vector
 

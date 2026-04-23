@@ -10,30 +10,31 @@
 %  profiles 
 %
 %see also : vit_geo_2017.m  section2km_SADCP_2017.m
+for q=1:4
 
 %% Adds paths where all the functions and data are located
-close all; 
-clear all;
+clearvars -except q; 
 
 addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding'))
 %% Defines parameters that will affect the outcome of the processing
-plot_figures_ADCP = 1; % Shows figures with ADCP velocites
-plot_figures_profils = 1; % Shows figures of the geostrophic velocity
+plot_figures_ADCP = 0; % Shows figures with ADCP velocites
+plot_figures_profils = 0; % Shows figures of the geostrophic velocity
 save_figure = 0; % Saves the figure as a PNG
 
 save_vabs = 0; % Saves the absolute velocity
-save_trsp = 0; % Saves transport
+save_trsp = 1; % Saves transport
 
 % Defines the hydrography data location
 fctd = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_Hydro2017/ctd/nc/rr17_PRES.nc';
 
 % You can choose the transect ='south','ovide', north', 'ride'
-section='ride'; display(['section ' section]);
+transect={'ride','south','ovide','north'};
+section=transect{q}; display(['section ' section]);
 
 corr=1; % Correction for fracture zones (CGFZ/BFZ)
-corr_internal_wave = 0; % Correction for internal waves
+corr_internal_wave = 1; % Correction for internal waves
 manual_REF = 1;
-methode = 'no_bottom'; %'pfit' (fit a plane), 'polyfit' (fit a polynomial), 'cstslope' (constant slope), 'horiz' (horizontal extrapolation)
+methode = 'polyfit'; %'pfit' (fit a plane), 'polyfit' (fit a polynomial), 'cstslope' (constant slope), 'horiz' (horizontal extrapolation)
 bottom_v = 0;
 %% Defines the stations and variables according to the transect
 
@@ -634,9 +635,11 @@ end
 %calcul du transport
 
 if strcmp(section,'ride')
-    X = lat_ctd;
+    X = lat;
+    X_ctd = lat_ctd;
 elseif strcmp(section,'south') || strcmp(section,'north')|| strcmp(section,'ovide')
-    X = lon_ctd;
+    X = lon;
+    X_ctd = lon_ctd;
 end
 
 % Transport surface-fond
@@ -656,7 +659,7 @@ end
 rept='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/transport_geo/';
 file_save=['transport_RREX17_' section '_' methode];
 if save_trsp == 1
-    save([rept file_save],'X','T_tot','T_up_bott_tr','T_barocline','T_barotrope');
+    save([rept file_save],'X','X_ctd','lat_ctd','lon_ctd','T_tot','T_up_bott_tr','T_barocline','T_barotrope','tr_z','tr_barocline');
 end
 
 %% ========================================================================
@@ -745,18 +748,18 @@ elseif strcmp(section,'south')
     hold on; text(-35.3,3.5,'(b) RREX 2017','FontWeight','bold','FontSize',12)
 end
 
-% Position des stations
-x_lim = [48 64];
-str_numero=num2str(STA); X_sta_pos = X;
-if X_sta_pos(1) > X_sta_pos(end); X_sta_pos=flip(X_sta_pos); str_numero=flip(str_numero); end
-posi=get(gca,'Posi');
-a2=axes('Posi',[posi(1) posi(2)+posi(4) posi(3) 0],'Color','none','FontSize',10);
-set(a2,'XLim',x_lim,'XTick',X_sta_pos,'XTickLabel',[],'YTick',[]);
-A = num2str([]);
-a2.XTickLabel = {A,str_numero(2,:),A,str_numero(4,:),A,str_numero(6,:),A,str_numero(8,:),A,str_numero(10,:),A,str_numero(12,:),A,A,A,A,A,A,A,str_numero(20,:),A,str_numero(22,:),A,str_numero(24,:),A,str_numero(26,:),A,str_numero(28,:)...
-   A,str_numero(30,:),A,str_numero(32,:),A,str_numero(34,:),A,A,A,A,A,A,A,A,A,str_numero(44,:),A,str_numero(46,:),A,str_numero(48,:),A,str_numero(50,:),A,str_numero(52,:),A,str_numero(54,:)...
-   A,str_numero(56,:),A,str_numero(58,:),A,str_numero(60,:),A,str_numero(62,:),A,A};
-set(a2,'XaxisLocation','top');
+% % Position des stations
+% x_lim = [48 64];
+% str_numero=num2str(STA); X_sta_pos = X;
+% if X_sta_pos(1) > X_sta_pos(end); X_sta_pos=flip(X_sta_pos); str_numero=flip(str_numero); end
+% posi=get(gca,'Posi');
+% a2=axes('Posi',[posi(1) posi(2)+posi(4) posi(3) 0],'Color','none','FontSize',10);
+% set(a2,'XLim',x_lim,'XTick',X_sta_pos,'XTickLabel',[],'YTick',[]);
+% A = num2str([]);
+% a2.XTickLabel = {A,str_numero(2,:),A,str_numero(4,:),A,str_numero(6,:),A,str_numero(8,:),A,str_numero(10,:),A,str_numero(12,:),A,A,A,A,A,A,A,str_numero(20,:),A,str_numero(22,:),A,str_numero(24,:),A,str_numero(26,:),A,str_numero(28,:)...
+%    A,str_numero(30,:),A,str_numero(32,:),A,str_numero(34,:),A,A,A,A,A,A,A,A,A,str_numero(44,:),A,str_numero(46,:),A,str_numero(48,:),A,str_numero(50,:),A,str_numero(52,:),A,str_numero(54,:)...
+%    A,str_numero(56,:),A,str_numero(58,:),A,str_numero(60,:),A,str_numero(62,:),A,A};
+% set(a2,'XaxisLocation','top');
 
     % saveas(gcf, ['C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/docs/figures/Ivane_RREX_output/vgeo2017/',titre_fig,'.png'])
 end
@@ -814,3 +817,4 @@ end
 % % Enregistrement du transport
 % save('../matlab_output_RREX17/transport_geo/transport_RREX17_ride_use' ,'X','T_tot','T_up_bott_tr','T_barocline','T_barotrope');
 % 
+end

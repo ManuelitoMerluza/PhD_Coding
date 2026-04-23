@@ -12,40 +12,41 @@
 %see also : vit_geo_2015.m 
 
 %% Adds paths where all the functions and data are located
-close all; 
+%close all; 
 clear all;
 
 addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding'))
 %% Defines parameters that will affect the outcome of the processing
-plot_figures_ADCP = 1; % Shows figures with ADCP velocites
+plot_figures_ADCP = 0; % Shows figures with ADCP velocites
 plot_figures_profils = 1; % Shows figures of the geostrophic velocity
 save_figure = 0; % Saves the figure as a PNG
 
-save_vabs = 1; % Saves the absolute velocity
-save_trsp = 1; % Saves transport
+save_vabs = 0; % Saves the absolute velocity
+save_trsp = 0; % Saves transport
 
 % Defines the hydrography data location
 fctd = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Hydrography/RREX2015_CTDO.nc';
 
 % You can choose the transect ='south','ovide', north', 'ride'
-section='ride'; display(['section ' section]);
+transect={'ride','south','ovide','north'};
+section=transect{1}; display(['section ' section]);
 
 corr=1; % Correction for fracture zones (CGFZ/BFZ)
 corr_internal_wave = 0; % Correction for internal waves
-manual_REF = 1;
+manual_REF = 0;
 methode = 'polyfit'; %'pfit' (fit a plane), 'polyfit' (fit a polynomial), 'cstslope' (constant slope), 'horiz' (horizontal extrapolation)
-bottom_v = 0;
+bottom_v = 0; % 1 is for the no bottom method (velocity drops to zero instead of extrapolating)
 %% Defines the stations and variables according to the transect
 
 if strcmp(section,'north')
     titre='vitesses geostrophiques absolues RREX 2015 North Section';
     titre_fig = 'vitesses_geo_abs_rrex15_north';
     % definition des sections a traiter
-    STA = [56:67]; STA=STA(:); nsta=size(STA,1); npair=nsta-1;
+    STA = [46:67]; STA=STA(:); nsta=size(STA,1); npair=nsta-1;
     % Title and output files
     tit='RREX 2015 North Section';
     file_save='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/vitesse_adcp/vitesse_sadcp_RREX15_OS38_north_m09_004_12_fhv21_sec_02mx21';
-    sign=-1; % Sign convertion for velocity
+    sign=1; % Sign convertion for velocity
     % Definition of the sign of the orthogonal velocity
     % The convention is the same as for the geostrophic velocity
     % A positive velocity indicates a velocity directed to the right of the
@@ -58,9 +59,7 @@ elseif strcmp(section,'ovide')
     STA = [26:45];STA=STA(:); nsta=size(STA,1); npair=nsta-1;
     tit='RREX 2015 Ovide Section';
     file_save='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/vitesse_adcp/vitesse_sadcp_RREX15_OS38_ovide_m09_004_12_fhv21_sec_02mx21';
-    sign_est=1; %attention une partie de la section +1 et une partie -1
-    sign_ouest=1;
-    
+    sign=-1; %attention une partie de la section +1 et une partie -1
     xref='lon';
     
  elseif strcmp(section,'south')
@@ -69,7 +68,7 @@ elseif strcmp(section,'ovide')
     STA = [3:10 15 16 21:25]; STA=STA(:); nsta=size(STA,1); npair=nsta-1;
     tit='RREX 2015 South Section';
     file_save='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/vitesse_adcp/vitesse_sadcp_RREX15_OS38_south_m09_004_12_fhv21_sec_02mx21';
-    sign=-1;
+    sign=1;
     xref='lon'; 
     
  elseif strcmp(section,'ride')
@@ -85,8 +84,12 @@ end
 
 %%% reading of SADCP data 
 load(file_save,'u_sadcp','v_sadcp', 'vorth_sadcp', 'lat_sadcp', 'lon_sadcp', 'dpair', 'dist_inter_profil', 'z_adcp');
-vorth_sadcp(1,:)=[]; % Deletes first column because it has NaN values
 z_adcp=abs(z_adcp);
+
+if strcmp(section,'ride')
+    vorth_sadcp(1,:)=[]; % Deletes first column because it has NaN values
+end
+
 nsec=size(vorth_sadcp,1); nz=length(z_adcp);
 % u_sadcp	Eastward ADCP velocity
 % v_sadcp	Northward ADCP velocity
@@ -103,7 +106,7 @@ nsec=size(vorth_sadcp,1); nz=length(z_adcp);
 if plot_figures_ADCP == 1
     
 figure;
-pcolor(repmat([1:nsec]',1,size(vorth_sadcp,2)),repmat(z_adcp',size(vorth_sadcp,1),1),vorth_sadcp)
+pcolor(1:nsec,z_adcp,vorth_sadcp')
 title('vorth_OS sur grille initiale avant bouchage trous en surface','Interpreter','none');
 hold on;
 shading flat;
@@ -113,7 +116,7 @@ ylim([0 1500]);
 
 end
 
-%Fills surface gaps in the velocity transect with the value closes to surface
+%% Fills surface gaps in the velocity transect with the value closes to surface
 vorth_sadcp_good=~isnan(vorth_sadcp);
 [i,j]=find(vorth_sadcp_good,1,'first'); % finds first "good" data point
 for i=1:nsec
@@ -140,7 +143,9 @@ ylim([0 1500]);
 
 end
 
-% pour les valeurs a NaN interpolation 
+%% NaN Interpolation
+
+%  pour les valeurs a NaN interpolation 
 isec_bad=isnan(vorth_sadcp(:,1)); % Find sections with NaN at first depth
 isec_bad=find(isec_bad); % Get indices of bad sections
 
@@ -169,9 +174,15 @@ z_interp = z_adcp(z_adcp <= z_keep(2) & z_adcp >= z_keep(1)); % Original depth i
 Vorth_OS38 = vorth_sadcp(:,z_adcp <= z_keep(2) & z_adcp >= z_keep(1)); %  Extract data only within 0-1200m depth range
 Vinterp1 = interp1(z_interp,Vorth_OS38',z_grid); % Interpolation to new grid
 %Vinterp1=fillmissing2(Vinterp1,"nearest")
-Vinterp1(1:100,715)=fillmissing(Vinterp1(1:100,715),"nearest"); % Fills NaN values in upper part of 715 column
-Vinterp1(:,4)=Vinterp1(:,3); % Repeats missing columns 4 and 5
-Vinterp1(:,5)=Vinterp1(:,6); % Repeats missing columns 4 and 5
+
+if strcmp(section,'ride')
+    Vinterp1(1:100,715)=fillmissing(Vinterp1(1:100,715),"nearest"); % Fills NaN values in upper part of 715 column
+    Vinterp1(:,4)=Vinterp1(:,3); % Repeats missing columns 4 and 5
+    Vinterp1(:,5)=Vinterp1(:,6); % Repeats missing columns 4 and 5
+elseif strcmp(section,'ovide')
+    Vinterp1(1:150,130:136)=fillmissing2(Vinterp1(1:150,130:136),"nearest");
+    Vinterp1(1:150,233:238)=fillmissing2(Vinterp1(1:150,233:238),"nearest");
+end
 
 if plot_figures_ADCP == 1
     
@@ -221,7 +232,7 @@ set(gca,'XDir','reverse');
 ylim([0 1500]);
 end
 
-% Horizontal filtering of velocity (8km):  
+%% Horizontal filtering of velocity (8km):  
 for i=1:nz   
     vorth_filt_horiz(:,i) = lanczos(vorth_filt_vert(:,i)',0.04,10);      
 end
@@ -250,6 +261,12 @@ plot_compare_filt_horiz = 0;
 % Defines lat and lon of stations (STA)
 lon_ctd = ncload(fctd,'LONGITUDE'); lon_ctd = lon_ctd(STA);
 lat_ctd = ncload(fctd,'LATITUDE');  lat_ctd = lat_ctd(STA);
+
+% Sorts longitude for the ovide transect
+if strcmp(section,'ovide')
+    [lon_ctd, aux]=sort(lon_ctd,'ascend');
+    lat_ctd=lat_ctd(aux);
+end
 
 % Definition de la couche de reference (fonction de la puissance du ADCP)
 z_ref = [250;1000]; %OS38 985m!
@@ -288,10 +305,10 @@ for i=1:npair % Makes a cycle for every station pair
         ok = lat_sadcp <= lat_ctd(i) & lat_sadcp >= lat_ctd(i+1); % Matching ADCP to station pairs
         
     elseif strcmp(section,'south') || strcmp(section,'north')
-        ok = lon_sadcp >= lon_ctd(i) & lon_sadcp <= lon_ctd(i+1);
+        ok = lon_sadcp <= lon_ctd(i) & lon_sadcp >= lon_ctd(i+1); 
         
     elseif strcmp(section,'ovide')
-        ok = lon_sadcp <= lon_ctd(i) & lon_sadcp >= lon_ctd(i+1);   
+        ok = lon_sadcp >= lon_ctd(i) & lon_sadcp <= lon_ctd(i+1);
     end
         
     sup_sec = nanmin(z_ref_det(ok,1)); % Minimum upper bound
@@ -393,6 +410,7 @@ end
 end
 
 
+%%
 
 for isec=1:nsec
     
@@ -437,11 +455,11 @@ for i=1:npair % Averaging between stations
     if strcmp(section,'ride'); 
         ok = lat_sadcp <= lat_ctd(i) & lat_sadcp >= lat_ctd(i+1);
         
-    elseif strcmp(section,'south') || strcmp(section,'north');
-        ok = lon_sadcp >= lon_ctd(i) & lon_sadcp <= lon_ctd(i+1);
+    elseif strcmp(section,'south') || strcmp(section,'north')
+        ok = lon_sadcp <= lon_ctd(i) & lon_sadcp >= lon_ctd(i+1); 
         
-    elseif strcmp(section,'ovide');
-        ok = lon_sadcp <= lon_ctd(i) & lon_sadcp >= lon_ctd(i+1);   
+    elseif strcmp(section,'ovide')
+        ok = lon_sadcp >= lon_ctd(i) & lon_sadcp <= lon_ctd(i+1);   
     end   
     
     v_ref_moy(i) = meanoutnan(v_ref(ok)); % Average between 2 stations
@@ -489,13 +507,7 @@ for i=1:npair % Loads the raw geostrophic velocity for each stations pairs
 end
 
 % Changes the sign (direction) depending on the transect
-if strcmp(section,'ride') || strcmp(section,'south') || strcmp(section,'north')
-    v=sign*v;
-elseif strcmp(section,'ovide')
-    v(:,1:7)=sign_est*v(:,1:7);
-    v(:,8:end)=sign_ouest*v(:,8:end);
-end
-
+v=sign*v;
     
 % The output arrays are passed as row vectors v and z of
 % dimension (nz_geo,npair). zat profile with maximum value of z
@@ -525,7 +537,7 @@ end
  
 %%% A common average v_ref1 value is used for stations located near fracture zones (to reduce geodynamic noise)
 if corr==1 & strcmp(section,'ride')
-    BFZ=25:31;
+    BFZ=25:32;
     CGFZ=41:45;
     moy_BFZ = meanoutnan(v_ref1(BFZ)); % Profil geo et ADCP proche a la paire 30: profils pas perturbe de la BFZ   
     moy_CGFZ = meanoutnan(v_ref1(CGFZ));
@@ -617,7 +629,7 @@ if plot_figures_profils == 1
         if save_figure == 1
             saveas(gcf, ['C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/docs/figures/Ivane_RREX_output/vgeo2017/prof_vgeo_' methode '_vSADCP_pair' num2str(STA(ipair)) '_filtre400m_RREX17.png'])
         end
-        close all
+        %close all
     end
 end
 
@@ -628,8 +640,11 @@ if save_vabs == 1
     rept = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/';
     
     % generation du nom du fichier de sortie
-    fic_vabs = ['vitesse_abs/OS38_section_' section '_' methode ];
-    %fic_vabs = ['vitesse_abs/OS150_section_' section ];
+    if bottom_v == 1
+        fic_vabs = ['vitesse_abs/OS38_section_' section '_no_bottom' ];
+    else
+        fic_vabs = ['vitesse_abs/OS38_section_' section '_' methode ];
+    end
     display(['Traitement du fichier ' fic_vabs]);
     dpair_abs=dpair; v_abs=v; z_abs = zat(:); lat_abs = lat; lon_abs = lon; Vref = v_ref1; Z_vref = z_vref_use_pair; ref_up_bott_triangle = ref_up_bott_tr;
     save([rept fic_vabs '.mat'],'dpair_abs','v_abs', 'v_barocline', 'z_abs','lat_abs','lon_abs','Vref','Z_vref','ref_up_bott_triangle');
@@ -641,9 +656,11 @@ end
 %calcul du transport
 
 if strcmp(section,'ride')
-    X = lat_ctd;
+    X = lat;
+    X_ctd = lat_ctd;
 elseif strcmp(section,'south') || strcmp(section,'north')|| strcmp(section,'ovide')
-    X = lon_ctd;
+    X = lon;
+    X_ctd = lon_ctd;
 end
 
 % Transport surface-fond
@@ -661,15 +678,22 @@ end
 
 % Enregistrement du transport
 rept='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/';
-file_save=['transport_RREX15_' section '_' methode];
+
+% This is if you use the no bottom method
+if bottom_v == 1
+    file_save=['transport_RREX15_' section '_no_bottom'];
+else
+    file_save=['transport_RREX15_' section '_' methode];
+end
+
 if save_trsp == 1
-    save([rept file_save],'X','T_tot','T_up_bott_tr','T_barocline','T_barotrope');
+    save([rept file_save],'X','X_ctd','lat_ctd','lon_ctd','T_tot','T_up_bott_tr','T_barocline','T_barotrope','tr_z','tr_barocline');
 end
 
 %% ========================================================================
 
 %%% Trace de la vitesse geostrophique absolue
-[bathy_ship,X_bathy,Y_bathy]=bathy_bateau_17(section);
+[bathy_ship,X_bathy,Y_bathy]=bathy_bateau(section);
 bathy_ship = bathy_ship.*1e-3;
 
 if strcmp(section,'south')||strcmp(section,'ride')||strcmp(section,'ovide');
@@ -768,56 +792,58 @@ set(a2,'XaxisLocation','top');
     % saveas(gcf, ['C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/docs/figures/Ivane_RREX_output/vgeo2017/',titre_fig,'.png'])
 end
 
-%% ========================================================================
-% clear all
-% close all
+%% This last part is for creating a ridge transect chimera using different methods
+% According to Tillys et al 2018, station pair 114 and 115 (36 and 37 in the vector) is better with
+% the no bottom method
+
+clear all
+%close all
+addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding'))
+
+
+path2015='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/vitesse_abs/';
+cruise='RREX 2017 '; % From which cruise
+
+% Load the polyfit method data
+load([path2015 'OS38_section_ride_polyfit.mat'])
+v_polyfit=v_abs;
+v_polyfit_barocline=v_barocline;
+
+% Load the no bottom method data
+load([path2015 'OS38_section_ride_no_bottom.mat'])
+v_no=v_abs;
+v_no_barocline=v_barocline;
+
+use_bottom=[2 4 5 18 23 24 27 28 29 34 36 38 39 41 47];
+
+v_use = v_polyfit; v_use(:,use_bottom) = v_no(:,use_bottom);
+v_use_barocline = v_polyfit_barocline; v_use_barocline(:,use_bottom) = v_no_barocline(:,use_bottom);
+
+v_abs=v_use; v_barocline=v_use_barocline;
+
+% Saves the data
+    rept = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/';
+    fic_vabs = ['vitesse_abs/OS38_section_ride_use'];
+    save([rept fic_vabs '.mat'],'dpair_abs','v_abs', 'v_barocline', 'z_abs','lat_abs','lon_abs','Vref','Z_vref','ref_up_bott_triangle');
+
+% The same for the transport
+
+path2015='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/';
+load([path2015 'transport_RREX15_ride_polyfit.mat']);
+
+tr_z=trsp_geo_tp(v_use,z_abs,dpair_abs);  tr_barocline=trsp_geo_tp(v_use_barocline,z_abs,dpair_abs); 
+tr_z = tr_z*1e-06;                        tr_barocline = tr_barocline*1e-06;
+
+for i=1:length(T_tot)
+    T_tot(i) = sum(tr_z(:,i));
+end
+
+for i=1:length(T_tot)
+    T_barocline(i) = sum(tr_barocline(:,i));
+    T_barotrope(i) = T_tot(i)-T_barocline(i);
+end
 % 
-% file_v_abs_polyfit = '../matlab_output_RREX17/vitesse_abs/OS38_section_ride_polyfit';
-% load(file_v_abs_polyfit); v_polyfit = v_abs; v_polyfit_barocline = v_barocline;
-% file_v_abs_cstslope = '../matlab_output_RREX17/vitesse_abs/OS38_section_ride_cstslope';
-% load(file_v_abs_cstslope,'v_abs'); v_cstslope = v_abs; v_cstslope_barocline = v_barocline;
-% file_v_abs_v_bottom = '../matlab_output_RREX17/vitesse_abs/OS38_section_ride_triangle_bottom';
-% load(file_v_abs_v_bottom,'v_abs'); v_bottom = v_abs;  v_bottom_barocline = v_barocline;
-% 
-% %polyfit:57,58,61,62,63,64,65,67,68,69,76,77,78,80,81,82,84,85,86,87,89,90,91,92,94,97,99,105,
-% %106,111,112,113,114,115,116,117,118,119,120,121,122,123
-% %cstslope:66,83,98,101,108,109
-% %v_bottom:56,59,60,79,88,93,95,96,100,102,103,104,107, 110,124
-% 
-% v_use= v_polyfit;
-% v_use(:,1)=v_bottom(:,1);  v_use(:,4)=v_bottom(:,4); v_use(:,5)=v_bottom(:,5);
-% v_use(:,11)=v_cstslope(:,11); v_use(:,18)= v_bottom(:,18); v_use(:,22)=v_cstslope(:,22);
-% v_use(:,27)=v_bottom(:,27); v_use(:,32)=v_bottom(:,32); v_use(:,34)=v_bottom(:,34);
-% v_use(:,35)=v_bottom(:,35); v_use(:,37)=v_cstslope(:,37); v_use(:,39)=v_bottom(:,39);
-% v_use(:,40)=v_cstslope(:,40); v_use(:,41)=v_bottom(:,41); v_use(:,42)=v_bottom(:,42);
-% v_use(:,43)=v_bottom(:,43); v_use(:,46)=v_bottom(:,46); v_use(:,47)=v_cstslope(:,47);
-% v_use(:,48)=v_cstslope(:,48); v_use(:,49)=v_bottom(:,49); v_use(:,63)=v_bottom(:,63);
-% 
-% v_abs = v_use;
-% 
-% v_barocline_use= v_polyfit_barocline;
-% v_barocline_use(:,1)=v_bottom_barocline(:,1);  v_barocline_use(:,4)=v_bottom_barocline(:,4); v_barocline_use(:,5)=v_bottom_barocline(:,5);
-% v_barocline_use(:,11)=v_cstslope_barocline(:,11); v_barocline_use(:,18)= v_bottom_barocline(:,18); v_barocline_use(:,22)=v_cstslope_barocline(:,22);
-% v_barocline_use(:,27)=v_bottom_barocline(:,27); v_barocline_use(:,32)=v_bottom_barocline(:,32); v_barocline_use(:,34)=v_bottom_barocline(:,34);
-% v_barocline_use(:,35)=v_bottom_barocline(:,35); v_use(:,37)=v_cstslope_barocline(:,37); v_barocline_use(:,39)=v_bottom_barocline(:,39);
-% v_barocline_use(:,40)=v_cstslope_barocline(:,40); v_barocline_use(:,41)=v_bottom_barocline(:,41); v_barocline_use(:,42)=v_bottom_barocline(:,42);
-% v_barocline_use(:,43)=v_bottom_barocline(:,43); v_barocline_use(:,46)=v_bottom_barocline(:,46); v_barocline_use(:,47)=v_cstslope_barocline(:,47);
-% v_barocline_use(:,48)=v_cstslope_barocline(:,48); v_barocline_use(:,49)=v_bottom_barocline(:,49); v_barocline_use(:,63)=v_bottom_barocline(:,63);
-% 
-% v_barocline = v_barocline_use;
-% 
-% save('../matlab_output_RREX17/vitesse_abs/OS38_section_ride_use.mat','dpair_abs','v_abs','v_barocline', 'z_abs','lat_abs','lon_abs','Vref','Z_vref','ref_up_bott_triangle');
-% 
-% load('../matlab_output_RREX17/transport_geo/transport_RREX17_ride_polyfit','X','T_up_bott_tr');
-% 
-% %%% Transport surface-fond
-% tr_z=trsp_geo_tp(v_use,z_abs,dpair_abs);  tr_barocline=trsp_geo_tp(v_barocline_use,z_abs,dpair_abs); 
-% tr_z = tr_z*1e-06;                        tr_barocline = tr_barocline*1e-06;
-% 
-% for i=1:63; T_tot(i) = sum(tr_z(:,i)); end
-% for i=1:63; T_barocline(i) = sum(tr_barocline(:,i));  T_barotrope(i) = T_tot(i)-T_barocline(i); end
-% 
-% 
-% % Enregistrement du transport
-% save('../matlab_output_RREX17/transport_geo/transport_RREX17_ride_use' ,'X','T_tot','T_up_bott_tr','T_barocline','T_barotrope');
-% 
+rept='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/';
+file_save='transport_RREX15_ride_use';
+
+save([rept file_save],'X','X_ctd','lat_ctd','lon_ctd','T_tot','T_up_bott_tr','T_barocline','T_barotrope','tr_z','tr_barocline');

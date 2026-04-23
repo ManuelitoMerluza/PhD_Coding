@@ -7,6 +7,7 @@
 % Derived from the thermal wind equation by using the dynamical height.
 %
 % see also : vit_geo_abs_2015.m 
+clear all
 
 %% Adds the path
 addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding'))
@@ -14,7 +15,11 @@ addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding'))
 % Defines the indices that will determine method and how data is stored
 save_vgeo = 1; % Save geostrophic velocities
 save_figure = 0; % Save figures
-section = 'ride'; % Choise of transects: 'north', 'ovide','south' , 'ride'
+
+% Choise of transects: 'north', 'ovide','south' , 'ride'
+transect={'ride','south','ovide','north'};
+section = transect{1};
+
 ref = 'vect'; % Reference level type
 extrap='other'; % Method for extrapolating in the bottom triangles 'other', 'horiz'
 methode = 'polyfit'; %'pfit' (fit a plane), 'polyfit' (fit a polynomial), 'cstslope' (constant slope), 'horiz' (horizontal extrapolation)
@@ -23,7 +28,7 @@ methode = 'polyfit'; %'pfit' (fit a plane), 'polyfit' (fit a polynomial), 'cstsl
 
 if strcmp(section,'north')
     xref='lo'; % latitude or longitude in degrees N/E
-    STA = [56:67]; STA=STA(:); nsta=size(STA,1); npair=nsta-1;
+    STA = [46:67]; STA=STA(:); nsta=size(STA,1); npair=nsta-1;
     titre_fig = 'vitesses_geo_rrex15_north';
 elseif strcmp(section,'ovide')
     xref='lo';
@@ -55,6 +60,15 @@ lg = ncread(fctd,'LONGITUDE'); lg = lg(STA);
 
 Time = ncread(fctd,'JULD_BEGIN'); Time = Time(STA);
 Time = datevec(double(Time));
+
+%% Sorts the stations in case it's not in ascending/descending order
+
+if strcmp(section,'ovide')
+    [lg, aux]=sort(lg,'ascend');
+    lat=lat(aux); Time=Time(aux,:);
+    S=S(:,aux); T=T(:,aux); P=P(:,aux); H=H(:,aux);
+end
+
 
 %% Calculates dynamic height
 dynh = sw_gpan(S,T,P);
@@ -390,8 +404,8 @@ if save_vgeo == 1
         dpair_geo=dpair(i); vgeo=ud(:,i);
         zl=P(:,find(max([pmae(i);pmae(i+1)])));
         zl = zl(:); lat_geo = latmoy(i); lon_geo = lgmoy(i);
-        ref_up_bott_triangle = ishdp(i,1);                            
-        save([rept fic_vgeo '.mat'],'dpair_geo','vgeo', 'zl', 'refc','lat_geo','lon_geo','ref_up_bott_triangle');
+        ref_up_bott_triangle = ishdp(i,1);  ref_d_bott_triangle = ishdp(i,2);                          
+        save([rept fic_vgeo '.mat'],'dpair_geo','vgeo', 'zl', 'refc','lat_geo','lon_geo','ref_up_bott_triangle','ref_d_bott_triangle');
     end
 end
 

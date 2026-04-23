@@ -1067,5 +1067,50 @@ ax2.XTick = []; ax2.YTick = [];           % hide duplicate ticks if desired
 xlabel(ax1,'Longitude'); ylabel(ax1,'Latitude');
 linkaxes([ax1 ax2]) 
 
+title('RREX 2015')
+colorbar; cbdate; cm=colormap(ax2,slanCM('oranges'))
+hold off
+
+%% 2017
+
+filename='AT_RREX_OS38_osite_m09_004_12_fhv21.nc';
+
+u=ncread(filename,'UVEL_ADCP');
+u=ncread(filename,'UVEL_ADCP');
+v=ncread(filename,'VVEL_ADCP');
+w=ncread(filename,'WVEL_ADCP');
+bindepth=ncread(filename,'DEPH');
+juldate=ncread(filename,'JULD');
+lat=ncread(filename,'LATITUDE');
+lon=ncread(filename,'LONGITUDE');
+bathymetry=ncread(filename,'BATHY');
+
+ref=datetime('1950-01-01 00:00:00');
+time=ref+days(juldate);
+
+%% Plot 
+
+figure(); set(gcf, 'Position',  [100, 100, 950, 575])
+ax1 = axes('Position',[0.07 0.12 0.86 0.78]); % adjust margins
+pcolor(lonsub,latsub,zsub); shading flat
+cm=colormap(ax1,flipud(slanCM('blues'))); caxis(ax1,[-4500 0]);
+cb = colorbar; set(cb, 'Visible', 'off');
+% Now lets add the scatter plot
+
+% Top axes: transparent for scatter (same position)
+ax2 = axes('Position', ax1.Position);
+ax2.Color = 'none';                      % transparent
+ax2.XLim = ax1.XLim; ax2.YLim = ax1.YLim;
+ax2.FontSize = 13;
+hold(ax2,'on')
+
+
+% Plot scatter on ax2
+s1 = scatter(ax2,lon, lat,[],datenum(time), 'filled');  
+ax2.XTick = []; ax2.YTick = [];           % hide duplicate ticks if desired
+xlabel(ax1,'Longitude'); ylabel(ax1,'Latitude');
+linkaxes([ax1 ax2]) 
+
+title('RREX 2017')
 colorbar; cbdate; cm=colormap(ax2,slanCM('oranges'))
 hold off

@@ -10,7 +10,7 @@
 
 %% ========================================================================
 clear all; 
-close all;
+%close all;
 
 addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding'))
 %% ========================================================================
@@ -22,7 +22,7 @@ save_figures_rapport = 0;
 sadcp = 'OS38'; disp(sadcp);
 
 % CHOIX DE LA SECTION parmi les sections 'north', 'ovide', 'south', 'ride'
-section='ride'; disp(section);
+section='south'; disp(section);
 %% ========================================================================
 switch sadcp
     case 'OS38'
@@ -42,7 +42,7 @@ rept = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/v
 % implications du choix de la section
 if strcmp(section,'north')
     
-    numero = [25]; numero=numero(:); % sections a traiter
+    numero = [22,23]; numero=numero(:); % sections a traiter
     switch sadcp 
         case 'OS38'
             titre='vitesses sadcp RREX 2017 OS38 North Section'; 
@@ -54,11 +54,11 @@ if strcmp(section,'north')
 
     % definition du signe de la vitesse orthogonale la convention est la meme que pour la vitesse geostrophique
     % une vitesse positive indique une vitesse dirigée sur la droite de la section definie par le premier et dernier segment.
-    sign=-1;
+    sign=1;
     xref='lon';    
     
 elseif strcmp(section,'ovide')
-    numero = [9 11 13 15 18 22 23] ; numero=numero(:);
+    numero = [10 12 13 14 16 18 20] ; numero=numero(:); % 10:20
     switch sadcp 
         case 'OS38'
             titre='vitesses sadcp RREX 2017 OS38 Ovide Section';
@@ -69,12 +69,12 @@ elseif strcmp(section,'ovide')
     end
 %     sign_est=1; %attention une partie de la section +1 et une partie -1
 %     sign_ouest=-1;
-      sign=1;
+      sign=-1;
     
     xref='lon';
     
  elseif strcmp(section,'south')
-    numero = [04 05 07]; numero=numero(:);
+    numero = [2 4 7 8]; numero=numero(:);
     switch sadcp 
         case 'OS38'
             titre='vitesses sadcp RREX 2017 OS38 South Section';
@@ -83,7 +83,7 @@ elseif strcmp(section,'ovide')
             titre='vitesses sadcp RREX 2017 OS150 South Section';
             titre_fig = 'vitesses_adcp_rrex17_OS150_south';
     end
-    sign=-1;
+    sign=1;
     xref='lon';
     
  elseif strcmp(section,'ride')
@@ -144,9 +144,13 @@ LonSta=SecLon(ijuld_keep);
 if strcmp(section,'ride')
     [LatSta aux]=sort(LatSta,'descend');
     LonSta=LonSta(aux);
-else
+elseif strcmp(section,'ovide')
     [LonSta aux]=sort(LonSta,'ascend');
     LatSta=LatSta(aux);
+else 
+    [LonSta aux]=sort(LonSta,'descend');
+    LatSta=LatSta(aux);
+
 end
 Ulnt=Ulnt(:,aux); Vlnt=Vlnt(:,aux);
 
@@ -156,16 +160,16 @@ Ulnt=Ulnt(:,aux); Vlnt=Vlnt(:,aux);
 % remarque: on ne peut pas simplement ranger X en odre
 % croissant/décroissant car il faut faire les mêmes permutations pour Vplot
 
-if strcmp(section,'ovide')
-    for j = 1:length(Ulnt(:,1))
-        A = fliplr(Ulnt(j,112:end));  Ulnt(j,112:end) = A;
-        B = fliplr(Vlnt(j,112:end));  Vlnt(j,112:end) = B;
-    end    
-
-    
-    C = fliplr(LatSta(112:end)'); C=C'; LatSta(112:end) = C;
-    D = fliplr(LonSta(112:end)'); D=D'; LonSta(112:end) = D;
-end
+% if strcmp(section,'ovide')
+%     for j = 1:length(Ulnt(:,1))
+%         A = fliplr(Ulnt(j,112:end));  Ulnt(j,112:end) = A;
+%         B = fliplr(Vlnt(j,112:end));  Vlnt(j,112:end) = B;
+%     end    
+% 
+% 
+%     C = fliplr(LatSta(112:end)'); C=C'; LatSta(112:end) = C;
+%     D = fliplr(LonSta(112:end)'); D=D'; LonSta(112:end) = D;
+% end
 
 % Projection des profils moyens par paire sur le plan perpendiculaire a la  section 
 % utilisation de la fonction dist_hm qui retourne la distance en metres et
