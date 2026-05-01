@@ -20,10 +20,13 @@ path2017='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17
 % 2) Bathymetry
 % 3) Ekman transport
 
-%% Makes a loop for running this automatically for all transect
+%% Load the error variables
 
-% for q=1:4
-q=1;
+load([path2015 'RREX_T_tot_errors.mat']);
+
+%% Defines the number for the south transect
+
+q=3;
 
 %% First lets define the transect and load the variables
 transect={'ride','south','ovide','north'};
@@ -35,8 +38,11 @@ figtitle=figtitle{q}; % Title for the figure
 imgname={'05Ttot_ridge.png','06.Ttot_south.png','07.Ttot_ovide.png','08.Ttot_north.png'};
 imgname=imgname{q}; % Name of the image being stored
 
-xlims=[48.4 64; -38.1 -31.3;-37.3 -27.3 ;-34 -21];
+xlims=[48.4 64; -39 -30;-37.3 -26.3 ;-34 -21];
 xlims=xlims(q,:); % x axis limits for plotting each transect
+
+ylims=[-45 35;-30 30;-30 30;-30 30];
+ylims=ylims(q,:);
 
 %% Loads and aranged the Bathymetry for both cruises
 
@@ -119,57 +125,45 @@ clear Y_bathy X_bathy bathy_ship ind_bad
 % Path for saving the figure
 figpath='C:\Users\mitg1n25\Desktop\PhD\PhD_Coding\docs\figures\Velocity_RREX';
 figname=fullfile(figpath, imgname);
-load('RREX_T_tot_ridge.mat'); % Loads the cumulated transports
+load('RREX_T_tot_ovide.mat'); % Loads the cumulated transports
 
 % 2015
 cruise='RREX2015 ';
-load([path2015 'transport_RREX15_' section '_use.mat'])
-T_sum=zeros(1,length(T_tot)+1); T_sum(2:end)=T_tot;
-T_sum=cumsum(T_sum); % This is for centering the start of the transport at zero
-X_sum=[X_ctd(1); X];
-points=[1,40,55,1,1]; % This is for highlighting points used for sumating transport along ridge
-aux1=X_sum(points); aux2=T_sum(points);
+
+points=[4,15,1,1]; % This is for highlighting points used for sumating transport along ridge
+aux1=X_sum2015(points); aux2=T_sum2015(points);
+start2015=find(T_sum2015==0); Tstart2015=T_sum2015(start2015); start2015=X_sum2015(start2015);
 
 figure()
 set(gcf, 'Position', [185, 0, 1000, 800]);
 ax1=subplot(2,1,1);
 hold on
-p1=plot(X_sum,T_sum,'-b','LineWidth',1.5,'DisplayName',cruise);
-
+p1=plot(X_sum2015,T_sum2015,'-b','LineWidth',1.5,'DisplayName',cruise);
 
 % 2017
-cruise='RREX2017 '; % From which cruise
-load([path2017 'transport_RREX17_' section '_use.mat'])
-T_sum=zeros(1,length(T_tot)+1); T_sum(2:end)=T_tot;
-T_sum=cumsum(T_sum); % This is for centering the start of the transport at zero
-X_sum=X;  %X_sum=[X_ctd(1); X]; this applies if its 'polyfit' instead of 'use'
-points=[49, 62];
-aux1(4:5)=X_sum(points); aux2(4:5)=T_sum(points);
 
-plot(X_sum,T_sum,'-r','LineWidth',1.5,'DisplayName',cruise);
+points=[6, 15];
+aux1(3:4)=X_sum2017(points); aux2(3:4)=T_sum2017(points);
+start2017=find(T_sum2017==0); Tstart2017=T_sum2017(start2017); start2017=X_sum2017(start2017);
+
+plot(X_sum2017,T_sum2017,'-r','LineWidth',1.5,'DisplayName',cruise);
 ylabel('Transport (Sv)');
-xlim(xlims); ylim([-45 35])
+xlim(xlims); ylim(ylims)
 title([figtitle ' Total Transport'],'FontName','LMRoman10','FontSize',15,'FontWeight','bold')
 L=legend('show');
 L.AutoUpdate = 'off';
-if strcmp(section,'ride')
-    xline(X_ctd(1),'--'); xline(58.9,'--') ; xline(56.4,'--')
-end
-plot(aux1,aux2,'ok','MarkerFaceColor','k','MarkerSize',4)
+
+
+plot(start2015,Tstart2015,'ob','MarkerFaceColor','k','MarkerSize',4)
+plot(start2017,Tstart2017,'or','MarkerFaceColor','k','MarkerSize',4)
+plot(aux1,aux2,'+','Color','k','MarkerSize',10,'Linewidth',1)
 xticklabels({}); grid on
 hold off
 
 subplot(2,1,2)
-if strcmp(section,'ride')
-    fill([65 64 X_bathy2017],[0 0 bathy_ship2017],[0.5 0.5 0.5]);
-    xline(X_ctd(1),'--'); xline(58.9,'--') ; xline(56.4,'--');
-    xlab='Latitude (°N)';
-    ylim([0 4.5])
-else
     fill(X_bathy2015,bathy_ship2015,[0.5 0.5 0.5]);
     xlab='Longitude (°E)';
     ylim([0 3])
-end
 set(gca,'ydir','reverse')
 ylabel('Depth (km)')
 xlim(xlims); xlabel(xlab);
@@ -180,23 +174,16 @@ shiftdown=0.1;
 pos = get(ax1, 'Position');
 pos(2) = pos(2) - shiftdown; 
 set(ax1, 'Position', pos);
-L.Location = 'best';
+L.Location = 'southwest';
 
 % We add the transport calculated by sections
-annotation('textbox',[.66 .62 .1 .2], 'String',[num2str(T_ride2015(1)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11.5,'FontWeight','bold')
-annotation('textbox',[.66 .595 .1 .2], 'String',[num2str(T_ride2017(1)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11.5,'FontWeight','bold')
+annotation('textbox',[.61 .62 .15 .2], 'String',[num2str(T_ovide2015(2)) ' ± ' num2str(error_ovide2015(2)) ' Sv'],'EdgeColor','none','Color','b','FontSize',10,'FontWeight','bold')
+annotation('textbox',[.61 .595 .15 .2], 'String',[num2str(T_ovide2017(2)) ' ± ' num2str(error_ovide2017(2)) ' Sv'],'EdgeColor','none','Color','r','FontSize',10,'FontWeight','bold')
 
-annotation('textbox',[.545 .62 .1 .2], 'String',[num2str(T_ride2015(2)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11.5,'FontWeight','bold')
-annotation('textbox',[.545 .595 .1 .2], 'String',[num2str(T_ride2017(2)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11.5,'FontWeight','bold')
+annotation('textbox',[.4 .62 .15 .2], 'String',[num2str(T_ovide2015(1)) ' ± ' num2str(error_ovide2015(1)) ' Sv'],'EdgeColor','none','Color','b','FontSize',10,'FontWeight','bold')
+annotation('textbox',[.4 .595 .15 .2], 'String',[num2str(T_ovide2017(1)) ' ± ' num2str(error_ovide2017(1)) ' Sv'],'EdgeColor','none','Color','r','FontSize',10,'FontWeight','bold')
 
-annotation('textbox',[.415 .62 .1 .2], 'String',[num2str(T_ride2015(3)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11.5,'FontWeight','bold')
-annotation('textbox',[.415 .595 .1 .2], 'String',[num2str(T_ride2017(3)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11.5,'FontWeight','bold')
-
-annotation('textbox',[.29 .62 .1 .2], 'String',[num2str(T_ride2015(4)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11.5,'FontWeight','bold')
-annotation('textbox',[.29 .595 .1 .2], 'String',[num2str(T_ride2017(4)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11.5,'FontWeight','bold')
 
 % Save the figure
 set(gca, 'LooseInset', get(gca, 'TightInset'));
 print(gcf,figname, '-dpng', '-r0', '-loose')
-
-% end

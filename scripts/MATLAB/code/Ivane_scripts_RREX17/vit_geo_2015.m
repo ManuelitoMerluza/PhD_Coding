@@ -7,22 +7,32 @@
 % Derived from the thermal wind equation by using the dynamical height.
 %
 % see also : vit_geo_abs_2015.m 
-clear all
 
-%% Adds the path
+%% THIS IS FOR MAKING A FOR THAT RUNS ALL AUTOMATICALLY
+
+for q=1:4
+    for qq=2
+
+        clearvars -except q qq; 
+
+%% Adds paths where all the functions and data are located
+
+
 addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding'))
 
-% Defines the indices that will determine method and how data is stored
+%% Defines the indices that will determine method and how data is stored
 save_vgeo = 1; % Save geostrophic velocities
 save_figure = 0; % Save figures
 
 % Choise of transects: 'north', 'ovide','south' , 'ride'
 transect={'ride','south','ovide','north'};
-section = transect{1};
+section = transect{q};
 
 ref = 'vect'; % Reference level type
 extrap='other'; % Method for extrapolating in the bottom triangles 'other', 'horiz'
-methode = 'polyfit'; %'pfit' (fit a plane), 'polyfit' (fit a polynomial), 'cstslope' (constant slope), 'horiz' (horizontal extrapolation)
+
+methods={'pfit','polyfit','cstslope','horiz'}; % Horiz does not work, you need to manualy put extrap as 'horiz'
+methode = methods{qq}; %'pfit' (fit a plane), 'polyfit' (fit a polynomial), 'cstslope' (constant slope), 'horiz' (horizontal extrapolation)
 
 %% Defines the transect to work on
 
@@ -399,7 +409,12 @@ if save_vgeo == 1
     rept = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/';
     for i=1:npair
         % generation du nom du fichier de sortie
-        fic_vgeo = ['vitesse_geo/vgeo_' section '_' methode '_' num2str(STA(i),'%3.3d') '_' num2str(STA(i+1),'%3.3d')]; 
+        if strcmp(extrap,'horiz')
+            fic_vgeo = ['vitesse_geo/vgeo_' section '_' extrap '_' num2str(STA(i),'%3.3d') '_' num2str(STA(i+1),'%3.3d')];
+             
+        else
+            fic_vgeo = ['vitesse_geo/vgeo_' section '_' methode '_' num2str(STA(i),'%3.3d') '_' num2str(STA(i+1),'%3.3d')];
+        end
         display(['Traitement du fichier ' fic_vgeo]);
         dpair_geo=dpair(i); vgeo=ud(:,i);
         zl=P(:,find(max([pmae(i);pmae(i+1)])));
@@ -445,3 +460,7 @@ end
 % close all
  % end
 
+
+        close all
+    end
+end

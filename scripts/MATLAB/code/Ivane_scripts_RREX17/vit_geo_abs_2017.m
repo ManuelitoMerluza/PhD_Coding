@@ -10,6 +10,8 @@
 %  profiles 
 %
 %see also : vit_geo_2017.m  section2km_SADCP_2017.m
+
+% THIS IS FOR MAKING A FOR THAT RUNS ALL AUTOMATICALLY
 for q=1:4
 
 %% Adds paths where all the functions and data are located
@@ -626,7 +628,7 @@ if save_vabs == 1
     %fic_vabs = ['vitesse_abs/OS150_section_' section ];
     display(['Traitement du fichier ' fic_vabs]);
     dpair_abs=dpair; v_abs=v; z_abs = zat(:); lat_abs = lat; lon_abs = lon; Vref = v_ref1; Z_vref = z_vref_use_pair; ref_up_bott_triangle = ref_up_bott_tr;
-    save([rept fic_vabs '.mat'],'dpair_abs','v_abs', 'v_barocline', 'z_abs','lat_abs','lon_abs','Vref','Z_vref','ref_up_bott_triangle');
+    save([rept fic_vabs '.mat'],'dpair_abs','v_abs', 'v_barocline', 'z_abs','lat_abs','lon_abs','Vref','Z_vref','z_vref_use','ref_up_bott_triangle');
 
 end
 
@@ -659,7 +661,7 @@ end
 rept='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/transport_geo/';
 file_save=['transport_RREX17_' section '_' methode];
 if save_trsp == 1
-    save([rept file_save],'X','X_ctd','lat_ctd','lon_ctd','T_tot','T_up_bott_tr','T_barocline','T_barotrope','tr_z','tr_barocline');
+    save([rept file_save],'X','X_ctd','lat_ctd','lon_ctd','T_tot','T_up_bott_tr','T_barocline','T_barotrope','tr_z','tr_barocline','z_vref_use');
 end
 
 %% ========================================================================

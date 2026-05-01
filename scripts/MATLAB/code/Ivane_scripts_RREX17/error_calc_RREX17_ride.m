@@ -8,11 +8,8 @@ function [Er_tot,Er_ek,Er_synopt,Er_phy,Er_bott,Er_nois,ins_nois,er_ins,er_aleat
 %%% l'erreur physique (approx geostrophique) qui correspond a l'erreur ageostrophique 
 %%% ET instrumentale des donnees. 
 
-addpath(genpath('../toolbox/matlab/matlab/outils_matlab/lpo'));
-%addpath('../toolbox/Rossby_Radius/'); 
-addpath('../toolbox/netcdf_lpo'); 
-addpath('../toolbox/matlab/matlab/outils_matlab/m_map1.4f/')
-%addpath('../These_Tillys/PROG/'); %recuperer ...
+addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding'))
+
 %% ========================================================================
 cruise = 'RREX17';
 
@@ -36,9 +33,11 @@ STA = [56:69 76:125];STA=STA(:); nsta=size(STA,1); npair=nsta-1; m=length(STA); 
 
 %% ========================================================================
 %%% Données hydro pour délimiter les masses d'eau
-load('../matlab_output_RREX17/vitesse_abs/OS38_section_ride_polyfit');
-load(['../matlab_output_RREX17/hydro/hydro_bottom_section_' section '_RREX17.mat']);
-load(['../matlab_output_RREX17/hydro/hydro_bottom_PVOR_section_' section '_RREX17.mat']);
+path='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/';
+
+load([path 'vitesse_abs/OS38_section_ride_polyfit']);
+load([path '/hydro/hydro_bottom_section_' section '_RREX17.mat']);
+load([path '/hydro/hydro_bottom_PVOR_section_' section '_RREX17.mat']);
 
 O_mid = (O(:,1:end-1)+O(:,2:end))./2; 
 S_mid = (S(:,1:end-1)+S(:,2:end))./2; 
@@ -47,7 +46,7 @@ q = q_filt;
 dens0 = (dens0_abs(:,1:end-1)+dens0_abs(:,2:end))./2;
 dens1 = (dens1_abs(:,1:end-1)+dens1_abs(:,2:end))./2;
     
-fctd = '../../DATA/HYDRO/RREX2017/ctd/nc/rr17_PRES.nc';
+fctd = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_Hydro2017/ctd/nc/rr17_PRES.nc';
 P = ncread(fctd,'PRES'); 
 P = P(:,2:end); P = P(:,STA);
 %%% determination des pressions max pour toutes les stations
@@ -62,9 +61,9 @@ end
 %%  =======================================================================
 % Erreurs liees au transport d'Ekman
 % Erreurs liees a l'estimation des tensions de vents 
-load(['../matlab_output_RREX17/transport_Ekman/trsp_ek_' section '_ncep_each.mat']); Tr_ek_ncep = tr_ek;
+load([path 'transport_Ekman/trsp_ek_' section '_ncep_each.mat']); Tr_ek_ncep = tr_ek;
 clear tr_ek v_ek
-load(['../matlab_output_RREX17/transport_Ekman/trsp_ek_' section '_era_each.mat']); Tr_ek_era = tr_ek; 
+load([path 'transport_Ekman/trsp_ek_' section '_era_each.mat']); Tr_ek_era = tr_ek; 
 clear tr_ek v_ek
 
 %%% On ne peut pas avoir de NaN pour le calcul RMS donc les NaN dans ncep
@@ -78,8 +77,8 @@ Er_estimat = rms(Tr_ek_ncep(ind_reg) - Tr_ek_era(ind_reg));
 
 % Erreurs liees a la synopticite du transport d'Ekman
 % Lecture des transports d'Ekman moyennés par paire ET sur toute la mission
-load(['../matlab_output_RREX17/transport_Ekman/trsp_ek_' section '_era_each.mat']); Tr_ek_each = tr_ek; 
-load(['../matlab_output_RREX17/transport_Ekman/trsp_ek_' section '_era_moyenne.mat']); Tr_ek_moy = tr_ek; 
+load([path 'transport_Ekman/trsp_ek_' section '_era_each.mat']); Tr_ek_each = tr_ek; 
+load([path 'transport_Ekman/trsp_ek_' section '_era_moyenne.mat']); Tr_ek_moy = tr_ek; 
 clear tr_ek v_ek
 
 Er_synopt = rms(Tr_ek_moy(ind_reg) - Tr_ek_each(ind_reg));
@@ -103,11 +102,11 @@ end
 % Erreurs des triangles de fond
 % lecture des transports dans les triangles de fond avec plusieurs methodes
 
-load('../matlab_output_RREX17/transport_geo/transport_RREX17_ride_polyfit.mat','X','T_tot','T_up_bott_tr'); Tr_polyfit = T_tot'-T_up_bott_tr'; lat_ctd = X';
-load('../matlab_output_RREX17/transport_geo/transport_RREX17_ride_pfit.mat','X','T_tot','T_up_bott_tr'); Tr_planfit = T_tot'-T_up_bott_tr'; lat_ctd = X';
-load('../matlab_output_RREX17/transport_geo/transport_RREX17_ride_cstslope.mat','X','T_tot','T_up_bott_tr'); Tr_cstslope = T_tot'-T_up_bott_tr'; lat_ctd = X';
-load('../matlab_output_RREX17/transport_geo/transport_RREX17_ride_horiz.mat','X','T_tot','T_up_bott_tr'); Tr_horiz = T_tot'-T_up_bott_tr'; lat_ctd = X';
-load('../matlab_output_RREX17/transport_geo/transport_RREX17_ride_triangle_bottom.mat','X','T_tot','T_up_bott_tr'); Tr_triangle_bottom = T_tot'-T_up_bott_tr'; lat_ctd = X';
+load([path 'transport_geo/transport_RREX17_ride_polyfit.mat'],'X','T_tot','T_up_bott_tr','z_vref_use'); Tr_polyfit = T_tot'-T_up_bott_tr'; lat_ctd = X';
+load([path 'transport_geo/transport_RREX17_ride_pfit.mat'],'X','T_tot','T_up_bott_tr'); Tr_planfit = T_tot'-T_up_bott_tr'; lat_ctd = X';
+load([path 'transport_geo/transport_RREX17_ride_cstslope.mat'],'X','T_tot','T_up_bott_tr'); Tr_cstslope = T_tot'-T_up_bott_tr'; lat_ctd = X';
+load([path 'transport_geo/transport_RREX17_ride_horiz.mat'],'X','T_tot','T_up_bott_tr'); Tr_horiz = T_tot'-T_up_bott_tr'; lat_ctd = X';
+load([path 'transport_geo/transport_RREX17_ride_triangle_bottom.mat'],'X','T_tot','T_up_bott_tr'); Tr_triangle_bottom = T_tot'-T_up_bott_tr'; lat_ctd = X';
 
 diff_bott = [(Tr_polyfit-Tr_planfit) (Tr_polyfit-Tr_cstslope) (Tr_polyfit-Tr_triangle_bottom) (Tr_planfit-Tr_cstslope) (Tr_planfit-Tr_triangle_bottom) (Tr_cstslope-Tr_triangle_bottom)];
 diff_bott(end,1) = 0; diff_bott(end,4) = 0; diff_bott(end,5) = 0;
@@ -151,7 +150,7 @@ end
 % Calcul pour l'OS38 uniquement
 
 % Lecture des donnees SADCP en segment de 2km
-load(['../matlab_output_RREX17/vitesse_adcp/vitesse_sadcp_RREX17_OS38_ride_m09_004_12_fhv21_sec_02mx21.mat']);
+load([path 'vitesse_adcp/vitesse_sadcp_RREX17_OS38_ride_m09_004_12_fhv21_sec_02mx21.mat']);
 
 
 %%% Firstly: erreur du bruit instrumental decorrele a ajoute dans l'erreur totale
@@ -242,6 +241,7 @@ end
 % chaque Lg, pour supprimer le bruit instrumental de l'erreur petite echelle
 
 %%% Moyenne de toute la paire dans la couche Lref
+% z_vref_use= Z_vref;
 Lref_sup = z_vref_use(:,1); Lref_inf = z_vref_use(:,2);
 
 for j=1:length(Lref_sup)
@@ -290,20 +290,23 @@ end
 ind_keep = [ind_2km length(lat_sadcp)];
 
 
+
+
 %%% Ecart a la moyenne dans chaque bin de longueur Lg (std) 
 for i_moy = 1:length(ind_keep)-1
     vorth_std(:,i_moy) = stdoutnan(v_ref(ind_keep(i_moy):ind_keep(i_moy+1)));    
     lat_sadcp_moy(i_moy) = meanoutnan(lat_sadcp(ind_keep(i_moy):ind_keep(i_moy+1))); 
     lon_sadcp_moy(i_moy) = meanoutnan(lon_sadcp(ind_keep(i_moy):ind_keep(i_moy+1))); 
 end
-    
+
+
 
 %%% Moyenne des segments geostorphiques dans les pairs de station
 for i=1:npair
     % Division des profils moyens dans chaque paire de station
     ok = lat_sadcp_moy <= lat_ctd(i) & lat_sadcp_moy >= lat_ctd(i+1); 
     v_inpair = vorth_std(:,ok);
-    
+
     % Moyenne de tous les std des bins dans chaque paire (on suppose une
     % meme onde ageo qui perturbe tous les profils de la paire)
     v_moy_pair = meanoutnan(meanoutnan(v_inpair)) ./ sqrt(size(v_inpair,2));
@@ -321,7 +324,7 @@ if strcmp(section,'ride')
     ind_nan = find(isnan(v_par_pair(ind_deb:ind_end)));
     if isempty(ind_nan)
     else v_moy = nanmean(v_par_pair(ind_deb:ind_end)); v_par_pair((ind_deb:ind_end)) = v_moy; end
-    
+
     % Dans la CGFZ
     ind_deb = find(STA==107); ind_end = find(STA==109);
     ind_nan = find(isnan(v_par_pair(ind_deb:ind_end)));
@@ -401,11 +404,11 @@ for ipair=1:npair
     else
         dz = z_abs(z_dens0(end))-z_abs(z_dens0(1));
     end    
-    
+
     % Erreur ageostrophique 
     t_par_pair = v_par_pair(ipair) .* dpair_abs(ipair) .* dz;
     t_par_pair = t_par_pair * 1e-06; %Convertion de m/s en Sv 
-    
+
     if isempty(t_par_pair); t_par_pair=NaN; end
     Er_phy(ipair) = t_par_pair;
 
@@ -430,7 +433,7 @@ end
 z_vref = [0 -250];
 z_grid = [-47.06:-12:z_vref(2)]; %pour interpolation sur une même grille
 
-file_sadcp = '../matlab_output_RREX17/vitesse_adcp/vitesse_sadcp_RREX17_OS38_ride_m09_004_12_fhv21_sec_02mx21';
+file_sadcp = [path 'vitesse_adcp/vitesse_sadcp_RREX17_OS38_ride_m09_004_12_fhv21_sec_02mx21'];
 load(file_sadcp,'vorth_sadcp','z_adcp');
 V_OS38 = vorth_sadcp(1:end-1,:)'; zl = -z_adcp; clear z_adcp
 
@@ -438,7 +441,7 @@ V_OS38 = V_OS38(zl >= z_vref(2) & zl <= z_vref(1),:);
 z_adcp = zl(find(zl >= z_vref(2) & zl <= z_vref(1)));
 V_OS38 = interp1(z_adcp,V_OS38,z_grid);
 
-file_sadcp = '../matlab_output_RREX17/vitesse_adcp/vitesse_sadcp_RREX17_OS150_ride_08_015_38_sec_02mx21';
+file_sadcp = [path 'vitesse_adcp/vitesse_sadcp_RREX17_OS150_ride_08_015_38_sec_02mx21'];
 load(file_sadcp,'vorth_sadcp','z_adcp');
 V_OS150 = vorth_sadcp'; zl = -z_adcp; clear z_adcp
 
@@ -469,7 +472,7 @@ diff_cum = cumsum(diff2);
 instr_bias = abs(diff_cum(end)./size(diff,2));
 
 %instr_bias = 0.00081; %m/s biais ride 2015, 0.00043 2017
-    
+
 er_ins = instr_bias .* nansum(Surf(ind_reg)) .* 1e-6;
 
 if isnan(er_ins) 

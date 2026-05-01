@@ -2,7 +2,7 @@
 % transects
 
 % We load paths and colorbars
-addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/Year 1 - 2026'))
+addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding'))
 %addpath(genpath('D:/Respaldo PC/iop/materia/Magister/Semestre 2/PRODIGY/m_map/'))
 set(0, 'DefaultAxesFontSize', 12);
 set(0, 'DefaultAxesTitleFontSizeMultiplier', 1.15)
@@ -16,7 +16,7 @@ load REXXBathymetry.mat
 
 % load("RREX2015_processed_VMP6000_ManuTest.mat")
 
-folder='C:/Users/mitg1n25/Desktop/PhD/Year 1 - 2026/Microstructure Data/RREX/Hydrography';
+folder='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Hydrography';
 filenames = dir(fullfile(folder,'*CTDO.nc')); % Check the variable position
 
 lat2015=ncread(filenames(1).name,'LATITUDE');
@@ -56,14 +56,14 @@ temp2017 = gsw_pt_from_t(SA2017,temp2017,pres2017);
 
 %% Separation of transects
 
-ridge_2015=[68:84 89:102 110:125];
+ridge_2015=[68:84 89:102 110:133];
 southridge_2015=126:133;
 eastridge_2015=46:55;
 westridge_2015=56:67;
 trans2_2015=26:45;
 trans1_2015=[3:10 15 16 21:25];
 
-ridge_2017=[57:70 77:86 92:114];
+ridge_2017=[57:70 77:86 92:126];
 southridge_2017=115:126;
 trans1_2017=[2:9 12:18];
 trans2_2017=[19:29 31:39 41:44];
@@ -89,11 +89,11 @@ namecelldZ = arrayfun(@(i) sprintf('dZ_%s', transect{i}), 1:5, 'UniformOutput', 
 namecellBottom = arrayfun(@(i) sprintf('Bottom_%s', transect{i}), 1:5, 'UniformOutput', false);
 
 % Defines variables used for plotting
-k=[1 5 9 13 17];
+k=[1 5 9 13];
 column_labels = {'\theta [°C]', 'Salinity [PSU]', '\sigma_0 [kg/m^3]', 'DO [\mumol/kg]'};
 
 figure('Position', [74, -43, 1812, 1065]);
-for i=1:length(transect)
+for i=1:length(transect)-1
     % Defines the transect variables
     a=dynamicvariable(transect{i},'_2015');
     b=dynamicvariable(transect{i},'_2017');
@@ -123,22 +123,22 @@ for i=1:length(transect)
 
     % Makes a Figure containing the difference in all transects
 
-    ax1=subplot(5,4,k(i));
+    ax1=subplot(4,4,k(i));
     pcolor(dx, dz, T2i-T1i); shading flat; set(gca, 'YDir', 'reverse');
     clim(ax1,[-1.5 1.5]); colormap(ax1,slanCM('vik'));
     hold on; area(dx,bottomi,5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
-    ax2=subplot(5,4,k(i)+1);
+    ax2=subplot(4,4,k(i)+1);
     pcolor(dx, dz, S2i-S1i); shading flat; set(gca, 'YDir', 'reverse');
     clim(ax2,[-0.2 0.2]); colormap(ax2,slanCM('delta'));
     hold on; area(dx,bottomi,5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
-    ax3=subplot(5,4,k(i)+2);
+    ax3=subplot(4,4,k(i)+2);
     pcolor(dx, dz, Sigma2i-Sigma1i); shading flat; set(gca, 'YDir', 'reverse');
     clim(ax3,[-0.15 0.15]); colormap(ax3,slanCM('PuOr'));
     hold on; area(dx,bottomi,5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
-    ax4=subplot(5,4,k(i)+3);
+    ax4=subplot(4,4,k(i)+3);
     pcolor(dx, dz, O2i-O1i); shading flat; set(gca, 'YDir', 'reverse');
     clim(ax4,[-25 25]); colormap(ax4,slanCM('coolwarm'));
     hold on; area(dx,bottomi,5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
@@ -195,10 +195,14 @@ for i=1:length(transect)
 
 end
 
+figpath=('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/docs/figures/Hydrography_RREX/');
+imgname='14.AllTransectDifference.png';
+figname=fullfile(figpath, imgname);
+
 % Make the figure have minimal borders when saving
 set(gca, 'LooseInset', get(gca, 'TightInset'));
-% exportgraphics(gca,'14.AllTransectDifference.png')
+print(gcf,figname, '-dpng', '-r0', '-loose')
 
-save('RREX_Transects_Interpolated.mat', '-struct' , 'RREX_Transects_Interpolated')
+% save([folder 'RREX_Transects_Interpolated.mat'], '-struct' , 'RREX_Transects_Interpolated')
 
 

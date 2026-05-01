@@ -19,10 +19,12 @@ save_figure = 0;
 save_figures_rapport = 0;
 
 % CHOIX ADCP = 'OS38' ou 'OS150'
-sadcp = 'OS38'; disp(sadcp);
+sadcp = 'OS150'; disp(sadcp);
 
 % CHOIX DE LA SECTION parmi les sections 'north', 'ovide', 'south', 'ride'
-section='south'; disp(section);
+transect={'ride','south','ovide','north'};
+section=transect{4}; disp(section);
+
 %% ========================================================================
 switch sadcp
     case 'OS38'
@@ -31,7 +33,7 @@ switch sadcp
         corr_value = 'm09_004_12_fhv21_sec_02mx21';
         file_save=['vitesse_sadcp_RREX15_',sadcp,'_',section,'_',corr_value,]; %nom du fichier de sortie sauvegardé 
     case 'OS150'
-        fsadcp = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Hydrography'; %(sorties CASCADE Herlé)
+        fsadcp = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Hydrography/'; %(sorties CASCADE Herlé)
         file_sadcp = 'RREX2015_ADCP150khz.nc';
         corr_value = '08_015_38_fhv1_sec_02mx1';
         file_save=['vitesse_sadcp_RREX15_',sadcp,'_',section,'_',corr_value,];

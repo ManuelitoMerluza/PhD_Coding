@@ -1,4 +1,4 @@
-%% This script will be used to plot the figures of geostrophic velocity
+%% This script will be used to plot the figures of geostrophic Transport
 %  and transport computed by Ivane's functions (Modified by Manuel Torres :3)
 
 %% Loads paths, colormap and defines text properties and 
@@ -12,68 +12,37 @@ load vmap % loads colormap
 vmap(29,:) = 0.97; % Changes the middle of the cbar so it can be less white
 
 % Paths where Abosolute Velocity Data is stored
-path2015='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/vitesse_abs/';
-path2017='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/vitesse_abs/';
-
+path2015='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/';
+path2017='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/transport_geo/';
 
 % It is important to have access to:
-% 1) Absolute velocity (Vgeo corrected by SADCP data)
+% 1) Transport between stations
 % 2) Bathymetry
+% 3) Ekman transport
 
-%% Adjust colormap (So grey is centered at zero)
-% 
-% load vmap0
-% cmap_original = vmap;
-% 
-% % Find white region (where R, G, B are all close to 1)
-% white_region = find(cmap_original(:,1) > 0.95 & ...
-%                     cmap_original(:,2) > 0.95 & ...
-%                     cmap_original(:,3) > 0.95);
-% 
-% white_center_idx = round(mean(white_region));
-% 
-% % Make symmetric by cropping
-% n_total = size(cmap_original, 1)-20;
-% n_left = white_center_idx - 1;
-% n_right = n_total - white_center_idx;
-% n_use = min(n_left, n_right);
-% 
-% cmap_symmetric = [cmap_original(white_center_idx-n_use:white_center_idx-1, :);
-%                   [1, 1, 1];
-%                   cmap_original(white_center_idx+1:white_center_idx+n_use, :)];
-% 
-% % Apply
-% vmap=cmap_symmetric;
-% save('vmap0.mat','vmap')
+%% Load the error variables
 
-%% Makes a loop for running this automatically for all transect
+load([path2015 'RREX_T_tot_errors.mat']);
 
-for q=2%:4
+%% Defines the number for the south transect
+
+q=4;
 
 %% First lets define the transect and load the variables
 transect={'ride','south','ovide','north'};
 section=transect{q}; % Transect being plotted
 
-cruise='RREX 2017 '; % From which cruise
-
-if strcmp(section,'ride') % Defines x axis depending on the transect
-    load([path2017 'OS38_section_' section '_use.mat'])
-    xaxis=lat_abs;
-    xlab='Latitude (°N)';
-else
-    load([path2017 'OS38_section_' section '_polyfit.mat'])
-    xaxis=lon_abs;
-    xlab='Longitude (°E)';
-end
-
 figtitle={'Reykjanes Ridge Transect','South Cross-Ridge Transect','OVIDE Transect','North West-Ridge Transect'};
 figtitle=figtitle{q}; % Title for the figure
 
-imgname={'01Vgeo_ridge.png','02.Vgeo_south.png','03.Vgeo_ovide.png','04.Vgeo_north.png'};
+imgname={'05Ttot_ridge.png','06.Ttot_south.png','07.Ttot_ovide.png','08.Ttot_north.png'};
 imgname=imgname{q}; % Name of the image being stored
 
-xlims=[48.4 63.4; -38.1 -31.3;-37.3 -27.3 ;-34 -21];
+xlims=[48.4 64; -39 -30;-37.3 -27.3 ;-34.5 -20];
 xlims=xlims(q,:); % x axis limits for plotting each transect
+
+ylims=[-45 35;-30 30;-30 30;-30 30];
+ylims=ylims(q,:);
 
 %% Loads and aranged the Bathymetry for both cruises
 
@@ -156,72 +125,62 @@ clear Y_bathy X_bathy bathy_ship ind_bad
 % Path for saving the figure
 figpath='C:\Users\mitg1n25\Desktop\PhD\PhD_Coding\docs\figures\Velocity_RREX';
 figname=fullfile(figpath, imgname);
-
-% 2017
-figure()
-ax2=subplot(2,1,2);
-set(gcf, 'Position', [185, 0, 1000, 850]);
-vcol=-0.2:0.02:0.2;
-hold on
-pcolor(xaxis,z_abs*1e-3,v_abs); shading interp;
-contour(xaxis,z_abs*1e-3,v_abs,[0, 0],'Linecolor',[0.35 0.35 0.35],'LineWidth',1.8);
-set(gca,'ydir','reverse')
-xlabel(xlab); ylabel('Depth (km)');
-colorbar; colormap(vmap);
-limcol=[vcol(1) vcol(end)]; clim(limcol); xlim(xlims);
-title(cruise)
-if strcmp(section,'ride')
-    fill(X_bathy2017(:),bathy_ship2017,[0.5 0.5 0.5]);
-    ylim([0 4.5])
-else
-    fill(X_bathy2015(:),bathy_ship2015,[0.5 0.5 0.5]);
-    ylim([0 3])
-end
+load('RREX_T_tot_north.mat'); % Loads the cumulated transports
 
 % 2015
-cruise='RREX 2015 ';
+cruise='RREX2015 ';
 
-if strcmp(section,'ride')
-    load([path2015 'OS38_section_' section '_use.mat'])
-    xaxis=lat_abs;
-    xlab='Latitude (°N)';
-else
-    load([path2015 'OS38_section_' section '_polyfit.mat'])
-    xaxis=lon_abs;
-    xlab='Longitude (°E)';
-end
+points=[5,18,1]; % This is for highlighting points used for sumating transport along ridge
+aux1=X_sum2015(points); aux2=T_sum2015(points);
+start2015=find(T_sum2015==0); Tstart2015=T_sum2015(start2015); start2015=X_sum2015(start2015);
 
+figure()
+set(gcf, 'Position', [185, 0, 1000, 800]);
 ax1=subplot(2,1,1);
-vcol=-0.2:0.02:0.2;
 hold on
-pcolor(xaxis,z_abs*1e-3,v_abs); shading interp;
-contour(xaxis,z_abs*1e-3,v_abs,[0, 0],'Linecolor',[0.35 0.35 0.35],'LineWidth',1.8);
-set(gca,'ydir','reverse')
-ylabel('Depth (km)');
-colorbar; colormap(vmap);
-limcol=[vcol(1) vcol(end)]; clim(limcol); xlim(xlims);
-title(cruise)
-sgtitle([figtitle ' Geostrophic Velocity'],'FontName','LMRoman10','FontSize',15,'FontWeight','bold')
-if strcmp(section,'ride')
-    fill(X_bathy2017(:),bathy_ship2017,[0.5 0.5 0.5]);
-    ylim([0 4.5])
-else
-    fill(X_bathy2015(:),bathy_ship2015,[0.5 0.5 0.5]);
+p1=plot(X_sum2015,T_sum2015,'-b','LineWidth',1.5,'DisplayName',cruise);
+
+% 2017
+cruise='RREX2017 '; % From which cruise
+
+points=8;
+aux1(3)=X_sum2017(points); aux2(3)=T_sum2017(points);
+
+plot(X_sum2017,T_sum2017,'-r','LineWidth',1.5,'DisplayName',cruise);
+ylabel('Transport (Sv)');
+xlim(xlims); ylim(ylims)
+title([figtitle ' Total Transport'],'FontName','LMRoman10','FontSize',15,'FontWeight','bold')
+L=legend('show');
+L.AutoUpdate = 'off';
+
+plot(start2015,Tstart2015,'ok','MarkerFaceColor','k','MarkerSize',4)
+plot(aux1,aux2,'+','Color','k','MarkerSize',10,'Linewidth',1)
+xticklabels({}); grid on
+hold off
+
+subplot(2,1,2)
+    fill(X_bathy2015,bathy_ship2015,[0.5 0.5 0.5]);
+    xlab='Longitude (°E)';
     ylim([0 3])
-end
+
+set(gca,'ydir','reverse')
+ylabel('Depth (km)')
+xlim(xlims); xlabel(xlab);
+grid on
 
 % This is for shifting the plots down
-shiftdown=0.05;
+shiftdown=0.1;
 pos = get(ax1, 'Position');
 pos(2) = pos(2) - shiftdown; 
 set(ax1, 'Position', pos);
+L.Location = 'southwest';
 
-% For some reason the previous step also stretches the plot to the side
-% I just set the position of the lower subplot so the same happens
-pos = get(ax2, 'Position');
-set(ax2, 'Position', pos);
+% We add the transport calculated by sections
+annotation('textbox',[.675 .62 .15 .2], 'String',[num2str(T_north2015(2)) ' ± ' num2str(error_north2015(2)) ' Sv'],'EdgeColor','none','Color','b','FontSize',10,'FontWeight','bold')
 
+annotation('textbox',[.5 .62 .15 .2], 'String',[num2str(T_north2015(1)) ' ± ' num2str(error_north2015(1)) ' Sv'],'EdgeColor','none','Color','b','FontSize',10,'FontWeight','bold')
+annotation('textbox',[.5 .595 .15 .2], 'String',[num2str(T_north2017) ' ± ' num2str(error_north2017) ' Sv'],'EdgeColor','none','Color','r','FontSize',10,'FontWeight','bold')
+
+% Save the figure
 set(gca, 'LooseInset', get(gca, 'TightInset'));
-%print(gcf,figname, '-dpng', '-r0', '-loose')
-
-end
+print(gcf,figname,'-dpng')

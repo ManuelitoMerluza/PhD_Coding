@@ -1,4 +1,4 @@
-function [Er_tot,Er_ek,Er_synopt,Er_phy,Er_bott,Er_nois,ins_nois,er_ins,er_aleatoire] = error_calc_RREX17_zonale(section,ind_reg,region,region_vert)
+function [Er_tot,Er_ek,Er_synopt,Er_phy,Er_bott,Er_nois,ins_nois,er_ins,er_aleatoire] = error_calc_RREX15_zonale(section,ind_reg,region,region_vert)
 %%% Fonction qui calcul les erreurs dans chaque region choisi par l'utilisateur
 %%%
 %%% L'erreur totale en sortie er_tot comprend l'erreur de synopticite 
@@ -11,45 +11,52 @@ function [Er_tot,Er_ek,Er_synopt,Er_phy,Er_bott,Er_nois,ins_nois,er_ins,er_aleat
 addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding'))
 
 %% ========================================================================
-cruise = 'RREX17';
+cruise = 'RREX15';
 
 %'layer1','NACW','SAW','layer2','SPMW','SAIW','IW','residual'
 %'layer3','LSW','ISW','layer4','LDW','ISOW','none'
 
-if strcmp(region,'R_IC_17')
+if strcmp(region,'R_IC_15')
     display(['cruise ' cruise ', section ' section ', IC, water mass ' region_vert]);
-elseif strcmp(region,'R_ERRC_17')
+elseif strcmp(region,'R_ERRC_15')
     display(['cruise ' cruise ', section ' section ', ERRC, water mass ' region_vert]);
 end
 
 %% ========================================================================
 
 if strcmp(section,'north')
-    STA = [44:55 57]; STA=STA(:); nsta=size(STA,1); npair=nsta-1; m=length(STA); 
+    STA = [46:67]; STA=STA(:); nsta=size(STA,1); npair=nsta-1; m=length(STA); 
 elseif strcmp(section,'ovide')
-    STA = [18:20 22:24 27:28 43:-1:41 38:-1:31]; STA=STA(:); nsta=size(STA,1); npair=nsta-1; m=length(STA); 
+    STA = [26:45];STA=STA(:); nsta=size(STA,1); npair=nsta-1; m=length(STA); 
 elseif strcmp(section,'south')
-    STA = [1:8 11:17]; STA=STA(:); nsta=size(STA,1); npair=nsta-1; m=length(STA); 
+    STA = [3:10 15 16 21:25]; STA=STA(:); nsta=size(STA,1); npair=nsta-1; m=length(STA); 
 end
 
 %% ========================================================================
 %%% Données hydro pour délimiter les masses d'eau
-path='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/';
+path='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/';
+fctd = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Hydrography/RREX2015_CTDO.nc';
 
 load([path 'vitesse_abs/OS38_section_ride_polyfit']);
-load([path '/hydro/hydro_bottom_section_' section '_RREX17.mat']);
-load([path '/hydro/hydro_bottom_PVOR_section_' section '_RREX17.mat']);
+%load([path '/hydro/hydro_bottom_section_' section '_RREX15.mat']);
+%load([path '/hydro/hydro_bottom_PVOR_section_' section '_RREX15.mat']);
+
+f = ncread(fctd,'VORP'); f = f(:,STA); % Planetary Vorticity
+BV = ncread(fctd,'BRV2'); BV = BV(:,STA); % Vrunt Vaisalla frequency squared 
+dens0_abs = ncread(fctd,'SIG0'); dens0_abs = dens0_abs(:,STA);
+dens1_abs = ncread(fctd,'SIG1'); dens1_abs = dens1_abs(:,STA);
+O = ncread(fctd,'OXYK'); O = O(:,STA);
+
+% This will be usefull when I start looking at water masses
+% S_mid = (S(:,1:end-1)+S(:,2:end))./2; 
+% Q_mid = (q(:,1:end-1)+q(:,2:end))./2; 
+% q = q_filt;
 
 O_mid = (O(:,1:end-1)+O(:,2:end))./2; 
-S_mid = (S(:,1:end-1)+S(:,2:end))./2; 
-Q_mid = (q(:,1:end-1)+q(:,2:end))./2; 
-q = q_filt;
 dens0 = (dens0_abs(:,1:end-1)+dens0_abs(:,2:end))./2;
 dens1 = (dens1_abs(:,1:end-1)+dens1_abs(:,2:end))./2;
     
-fctd = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_Hydro2017/ctd/nc/rr17_PRES.nc';
-P = ncread(fctd,'PRES'); 
-P = P(:,2:end); P = P(:,STA);
+P = ncread(fctd,'PRES'); P = P(:,STA);
 %%% determination des pressions max pour toutes les stations
 n = size(P,1);
 m = size(P,2);
@@ -59,6 +66,7 @@ for i = 1:m
     ind_keep = find(inan==0);
     pmae(i) = ind_keep(end)-1;  %-1 car valeur pmae = indice ind_keep-1
 end 
+
 %%  =======================================================================
 % Erreurs liees au transport d'Ekman
 % Erreurs liees a l'estimation des tensions de vents 
@@ -103,11 +111,11 @@ end
 % Erreurs des triangles de fond
 % lecture des transports dans les triangles de fond avec plusieurs methodes
 
-load([path 'transport_geo/transport_RREX17_' section '_polyfit.mat'],'X','T_tot','T_up_bott_tr','z_vref_use'); Tr_polyfit = T_tot'-T_up_bott_tr'; lon_ctd = X';
-load([path 'transport_geo/transport_RREX17_' section '_pfit.mat'],'X','T_tot','T_up_bott_tr'); Tr_planfit = T_tot'-T_up_bott_tr'; lon_ctd = X';
-load([path 'transport_geo/transport_RREX17_' section '_cstslope.mat'],'X','T_tot','T_up_bott_tr'); Tr_cstslope = T_tot'-T_up_bott_tr'; lon_ctd = X';
-% load([path 'transport_geo/transport_RREX17_' ride '_horiz.mat'],'X','T_tot','T_up_bott_tr'); Tr_horiz = T_tot'-T_up_bott_tr'; lat_ctd = X';
-load([path 'transport_geo/transport_RREX17_' section '_triangle_bottom.mat'],'X','T_tot','T_up_bott_tr'); Tr_triangle_bottom = T_tot'-T_up_bott_tr'; lon_ctd = X';
+load([path 'transport_geo/transport_' cruise '_' section '_polyfit.mat'],'lon_ctd','X','T_tot','T_up_bott_tr','z_vref_use'); Tr_polyfit = T_tot'-T_up_bott_tr'; %lat_ctd = X';
+load([path 'transport_geo/transport_' cruise '_' section '_pfit.mat'],'T_tot','T_up_bott_tr'); Tr_planfit = T_tot'-T_up_bott_tr';
+load([path 'transport_geo/transport_' cruise '_' section '_cstslope.mat'],'T_tot','T_up_bott_tr'); Tr_cstslope = T_tot'-T_up_bott_tr';
+%load([path 'transport_geo/transport_' cruise '_ride_horiz.mat'],'X','T_tot','T_up_bott_tr'); Tr_horiz = T_tot'-T_up_bott_tr';
+load([path 'transport_geo/transport_' cruise '_' section '_no_bottom.mat'],'T_tot','T_up_bott_tr'); Tr_triangle_bottom = T_tot'-T_up_bott_tr'; 
 
 %diff_bott = [(Tr_polyfit-Tr_planfit) (Tr_polyfit-Tr_cstslope) (Tr_polyfit-Tr_horiz) (Tr_planfit-Tr_cstslope) (Tr_planfit-Tr_horiz) (Tr_cstslope-Tr_horiz)];
 diff_bott = [(Tr_polyfit-Tr_planfit) (Tr_polyfit-Tr_cstslope) (Tr_polyfit-Tr_triangle_bottom) (Tr_planfit-Tr_cstslope) (Tr_planfit-Tr_triangle_bottom) (Tr_cstslope-Tr_triangle_bottom)];
@@ -151,7 +159,7 @@ end
 % Calcul pour l'OS38 uniquement
 
 % Lecture des donnees SADCP en segment de 2km
-load([path 'vitesse_adcp/vitesse_sadcp_RREX17_OS38_' section '_m09_004_12_fhv21_sec_02mx21.mat']);
+load([path 'vitesse_adcp/vitesse_sadcp_RREX15_OS38_' section '_m09_004_12_fhv21_sec_02mx21.mat']);
 
 
 %%% Firstly: erreur du bruit instrumental decorrele a ajoute dans l'erreur totale
@@ -161,10 +169,10 @@ load([path 'vitesse_adcp/vitesse_sadcp_RREX17_OS38_' section '_m09_004_12_fhv21_
 
 
 if strcmp(section,'south') || strcmp(section,'north');
-    ind_seg2km = find(lon_sadcp > lon_ctd(1) & lon_sadcp < lon_ctd(end));
+    ind_seg2km = find(lon_sadcp < lon_ctd(1) & lon_sadcp > lon_ctd(end));
         
 elseif strcmp(section,'ovide');
-    ind_seg2km = find(lon_sadcp < lon_ctd(1) & lon_sadcp > lon_ctd(end));
+    ind_seg2km = find(lon_sadcp > lon_ctd(1) & lon_sadcp < lon_ctd(end));
   
 end
 
@@ -252,17 +260,18 @@ end
 %%% Moyenne de toute la paire dans la couche Lref
 Lref_sup = z_vref_use(:,1); Lref_inf = z_vref_use(:,2);
 
+
 for j=1:length(Lref_sup)
     [mini,ind_sup] = min(abs(z_adcp-Lref_sup(j)));
     [mini,ind_inf] = min(abs(z_adcp-Lref_inf(j)));
-    
+
     vorth_lref(j) = nanmean(vorth_sadcp(j,[ind_sup:ind_inf]));
-    
+
     % dans le cas ou la mauvaise couche de ref a ete renseigne, on prend depuis la surface
     if isnan(vorth_lref(j))
         vorth_lref(j) = nanmean(vorth_sadcp(j,[1:ind_inf]));
     end
-    
+
 end
 
 
@@ -290,7 +299,7 @@ dist_all=[]; ind_2km=1;
 for iN=1:length(lon_sadcp)-1
     dist = m_lldist([lon_sadcp(iN) lon_sadcp(iN+1)],[lat_sadcp(iN) lat_sadcp(iN+1)]);
     dist_all = [dist_all dist];
-    
+
     if nansum(dist_all) >= Lg(ind_2km(end))
         ind_2km = [ind_2km iN];
         dist_all = [];
@@ -305,19 +314,19 @@ for i_moy = 1:length(ind_keep)-1
     lat_sadcp_moy(i_moy) = meanoutnan(lat_sadcp(ind_keep(i_moy):ind_keep(i_moy+1))); 
     lon_sadcp_moy(i_moy) = meanoutnan(lon_sadcp(ind_keep(i_moy):ind_keep(i_moy+1))); 
 end
-    
+
 
 %%% Moyenne des segments geostorphiques dans les pairs de station
 for i=1:npair
     % Division des profils moyens dans chaque paire de station
     if strcmp(section,'south') || strcmp(section,'north');
-        ok = lon_sadcp_moy >= lon_ctd(i) & lon_sadcp_moy <= lon_ctd(i+1);
-        
+        ok = lon_sadcp_moy <= lon_ctd(i) & lon_sadcp_moy >= lon_ctd(i+1);
+
     elseif strcmp(section,'ovide');
-        ok = lon_sadcp_moy <= lon_ctd(i) & lon_sadcp_moy >= lon_ctd(i+1);   
+        ok = lon_sadcp_moy >= lon_ctd(i) & lon_sadcp_moy <= lon_ctd(i+1);   
     end
     v_inpair = vorth_std(:,ok);
-    
+
     % Moyenne de tous les std des bins dans chaque paire (on suppose une
     % meme onde ageo qui perturbe tous les profils de la paire)
     v_moy_pair = meanoutnan(meanoutnan(v_inpair)) ./ sqrt(size(v_inpair,2));
@@ -370,11 +379,11 @@ for ipair=1:npair
     else
         dz = z_abs(z_dens0(end))-z_abs(z_dens0(1));
     end    
-    
+
     % Erreur ageostrophique 
     t_par_pair = v_par_pair(ipair) .* dpair_abs(ipair) .* dz;
     t_par_pair = t_par_pair * 1e-06; %Convertion de m/s en Sv 
-    
+
     if isempty(t_par_pair); t_par_pair=NaN; end
     Er_phy(ipair) = t_par_pair;
 
@@ -438,7 +447,7 @@ end
 %instr_bias = abs(diff_cum(end)./size(diff,2));
 
 instr_bias = 0.000434; %m/s biais ride 
-    
+
 er_ins = instr_bias .* nansum(Surf(ind_reg)) .* 1e-6;
 
 if isnan(er_ins) 
@@ -480,4 +489,5 @@ else
     display(['Total transport error ' num2str(Er_tot) ])
 end
 
+end
 

@@ -41,7 +41,7 @@ for i=1:nvar
     if strcmp(varargin{i},'STATION_NUMBER') || strcmp(varargin{i},'MAX_PRESSURE')
         
         %var=ncload('/home/lpo5/HYDROCEAN/MLT_NC/LPO/RREX/RREX17/rr17_PRES.nc',varargin{i});
-        var=ncload('../../DATA/HYDRO/RREX2017/ctd/nc/rr17_PRES.nc',varargin{i});
+        var=ncload(fctd,varargin{i});
         var(var==-9999) = NaN;
 
         interm=[];
@@ -55,7 +55,7 @@ for i=1:nvar
     else
 
         %var=ncload('/home/lpo5/HYDROCEAN/MLT_NC/LPO/RREX/RREX17/rr17_PRES.nc',varargin{i});
-        var=ncload('../../DATA/HYDRO/RREX2017/ctd/nc/rr17_PRES.nc',varargin{i});
+        var=ncload(fctd,varargin{i});
         var(var==-9999) = NaN;
 
         interm=[];

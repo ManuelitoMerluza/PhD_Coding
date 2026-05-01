@@ -11,31 +11,37 @@
 %
 %see also : vit_geo_2015.m 
 
+%% THIS IS FOR MAKING A FOR THAT RUNS ALL AUTOMATICALLY
+
+for q=1:4
+    for qq=2
+
 %% Adds paths where all the functions and data are located
-%close all; 
-clear all;
+clearvars -except q qq; 
 
 addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding'))
 %% Defines parameters that will affect the outcome of the processing
 plot_figures_ADCP = 0; % Shows figures with ADCP velocites
-plot_figures_profils = 1; % Shows figures of the geostrophic velocity
+plot_figures_profils = 0; % Shows figures of the geostrophic velocity
 save_figure = 0; % Saves the figure as a PNG
 
-save_vabs = 0; % Saves the absolute velocity
-save_trsp = 0; % Saves transport
+save_vabs = 1; % Saves the absolute velocity
+save_trsp = 1; % Saves transport
 
 % Defines the hydrography data location
 fctd = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Hydrography/RREX2015_CTDO.nc';
 
 % You can choose the transect ='south','ovide', north', 'ride'
 transect={'ride','south','ovide','north'};
-section=transect{1}; display(['section ' section]);
+section=transect{q}; display(['section ' section]);
 
 corr=1; % Correction for fracture zones (CGFZ/BFZ)
 corr_internal_wave = 0; % Correction for internal waves
 manual_REF = 0;
-methode = 'polyfit'; %'pfit' (fit a plane), 'polyfit' (fit a polynomial), 'cstslope' (constant slope), 'horiz' (horizontal extrapolation)
-bottom_v = 0; % 1 is for the no bottom method (velocity drops to zero instead of extrapolating)
+
+methods={'pfit','polyfit','cstslope','horiz'}; % Horiz did not work in the v_geo script so I'll skip it
+methode = methods{qq}; %'pfit' (fit a plane), 'polyfit' (fit a polynomial), 'cstslope' (constant slope), 'horiz' (horizontal extrapolation)
+bottom_v = 1; % 1 is for the no bottom method (velocity drops to zero instead of extrapolating)
 %% Defines the stations and variables according to the transect
 
 if strcmp(section,'north')
@@ -687,7 +693,7 @@ else
 end
 
 if save_trsp == 1
-    save([rept file_save],'X','X_ctd','lat_ctd','lon_ctd','T_tot','T_up_bott_tr','T_barocline','T_barotrope','tr_z','tr_barocline');
+    save([rept file_save],'X','X_ctd','lat_ctd','lon_ctd','T_tot','T_up_bott_tr','T_barocline','T_barotrope','tr_z','tr_barocline','z_vref_use');
 end
 
 %% ========================================================================
@@ -796,54 +802,58 @@ end
 % According to Tillys et al 2018, station pair 114 and 115 (36 and 37 in the vector) is better with
 % the no bottom method
 
-clear all
-%close all
-addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding'))
-
-
-path2015='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/vitesse_abs/';
-cruise='RREX 2017 '; % From which cruise
-
-% Load the polyfit method data
-load([path2015 'OS38_section_ride_polyfit.mat'])
-v_polyfit=v_abs;
-v_polyfit_barocline=v_barocline;
-
-% Load the no bottom method data
-load([path2015 'OS38_section_ride_no_bottom.mat'])
-v_no=v_abs;
-v_no_barocline=v_barocline;
-
-use_bottom=[2 4 5 18 23 24 27 28 29 34 36 38 39 41 47];
-
-v_use = v_polyfit; v_use(:,use_bottom) = v_no(:,use_bottom);
-v_use_barocline = v_polyfit_barocline; v_use_barocline(:,use_bottom) = v_no_barocline(:,use_bottom);
-
-v_abs=v_use; v_barocline=v_use_barocline;
-
-% Saves the data
-    rept = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/';
-    fic_vabs = ['vitesse_abs/OS38_section_ride_use'];
-    save([rept fic_vabs '.mat'],'dpair_abs','v_abs', 'v_barocline', 'z_abs','lat_abs','lon_abs','Vref','Z_vref','ref_up_bott_triangle');
-
-% The same for the transport
-
-path2015='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/';
-load([path2015 'transport_RREX15_ride_polyfit.mat']);
-
-tr_z=trsp_geo_tp(v_use,z_abs,dpair_abs);  tr_barocline=trsp_geo_tp(v_use_barocline,z_abs,dpair_abs); 
-tr_z = tr_z*1e-06;                        tr_barocline = tr_barocline*1e-06;
-
-for i=1:length(T_tot)
-    T_tot(i) = sum(tr_z(:,i));
-end
-
-for i=1:length(T_tot)
-    T_barocline(i) = sum(tr_barocline(:,i));
-    T_barotrope(i) = T_tot(i)-T_barocline(i);
-end
+% clear all
+% %close all
+% addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding'))
 % 
-rept='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/';
-file_save='transport_RREX15_ride_use';
+% 
+% path2015='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/vitesse_abs/';
+% cruise='RREX 2017 '; % From which cruise
+% 
+% % Load the polyfit method data
+% load([path2015 'OS38_section_ride_polyfit.mat'])
+% v_polyfit=v_abs;
+% v_polyfit_barocline=v_barocline;
+% 
+% % Load the no bottom method data
+% load([path2015 'OS38_section_ride_no_bottom.mat'])
+% v_no=v_abs;
+% v_no_barocline=v_barocline;
+% 
+% use_bottom=[2 4 5 18 23 24 27 28 29 34 36 38 39 41 47];
+% 
+% v_use = v_polyfit; v_use(:,use_bottom) = v_no(:,use_bottom);
+% v_use_barocline = v_polyfit_barocline; v_use_barocline(:,use_bottom) = v_no_barocline(:,use_bottom);
+% 
+% v_abs=v_use; v_barocline=v_use_barocline;
+% 
+% % Saves the data
+%     rept = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/';
+%     fic_vabs = ['vitesse_abs/OS38_section_ride_use'];
+%     save([rept fic_vabs '.mat'],'dpair_abs','v_abs', 'v_barocline', 'z_abs','lat_abs','lon_abs','Vref','Z_vref','ref_up_bott_triangle');
+% 
+% % The same for the transport
+% 
+% path2015='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/';
+% load([path2015 'transport_RREX15_ride_polyfit.mat']);
+% 
+% tr_z=trsp_geo_tp(v_use,z_abs,dpair_abs);  tr_barocline=trsp_geo_tp(v_use_barocline,z_abs,dpair_abs); 
+% tr_z = tr_z*1e-06;                        tr_barocline = tr_barocline*1e-06;
+% 
+% for i=1:length(T_tot)
+%     T_tot(i) = sum(tr_z(:,i));
+% end
+% 
+% for i=1:length(T_tot)
+%     T_barocline(i) = sum(tr_barocline(:,i));
+%     T_barotrope(i) = T_tot(i)-T_barocline(i);
+% end
+% % 
+% rept='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/';
+% file_save='transport_RREX15_ride_use';
+% 
+% save([rept file_save],'X','X_ctd','lat_ctd','lon_ctd','T_tot','T_up_bott_tr','T_barocline','T_barotrope','tr_z','tr_barocline');
 
-save([rept file_save],'X','X_ctd','lat_ctd','lon_ctd','T_tot','T_up_bott_tr','T_barocline','T_barotrope','tr_z','tr_barocline');
+close all
+    end
+end
