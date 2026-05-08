@@ -767,56 +767,56 @@ end
 end
 
 %% ========================================================================
-% clear all
-% close all
-% 
-% file_v_abs_polyfit = '../matlab_output_RREX17/vitesse_abs/OS38_section_ride_polyfit';
-% load(file_v_abs_polyfit); v_polyfit = v_abs; v_polyfit_barocline = v_barocline;
-% file_v_abs_cstslope = '../matlab_output_RREX17/vitesse_abs/OS38_section_ride_cstslope';
-% load(file_v_abs_cstslope,'v_abs'); v_cstslope = v_abs; v_cstslope_barocline = v_barocline;
-% file_v_abs_v_bottom = '../matlab_output_RREX17/vitesse_abs/OS38_section_ride_triangle_bottom';
-% load(file_v_abs_v_bottom,'v_abs'); v_bottom = v_abs;  v_bottom_barocline = v_barocline;
-% 
-% %polyfit:57,58,61,62,63,64,65,67,68,69,76,77,78,80,81,82,84,85,86,87,89,90,91,92,94,97,99,105,
-% %106,111,112,113,114,115,116,117,118,119,120,121,122,123
-% %cstslope:66,83,98,101,108,109
-% %v_bottom:56,59,60,79,88,93,95,96,100,102,103,104,107, 110,124
-% 
-% v_use= v_polyfit;
-% v_use(:,1)=v_bottom(:,1);  v_use(:,4)=v_bottom(:,4); v_use(:,5)=v_bottom(:,5);
-% v_use(:,11)=v_cstslope(:,11); v_use(:,18)= v_bottom(:,18); v_use(:,22)=v_cstslope(:,22);
-% v_use(:,27)=v_bottom(:,27); v_use(:,32)=v_bottom(:,32); v_use(:,34)=v_bottom(:,34);
-% v_use(:,35)=v_bottom(:,35); v_use(:,37)=v_cstslope(:,37); v_use(:,39)=v_bottom(:,39);
-% v_use(:,40)=v_cstslope(:,40); v_use(:,41)=v_bottom(:,41); v_use(:,42)=v_bottom(:,42);
-% v_use(:,43)=v_bottom(:,43); v_use(:,46)=v_bottom(:,46); v_use(:,47)=v_cstslope(:,47);
-% v_use(:,48)=v_cstslope(:,48); v_use(:,49)=v_bottom(:,49); v_use(:,63)=v_bottom(:,63);
-% 
-% v_abs = v_use;
-% 
-% v_barocline_use= v_polyfit_barocline;
-% v_barocline_use(:,1)=v_bottom_barocline(:,1);  v_barocline_use(:,4)=v_bottom_barocline(:,4); v_barocline_use(:,5)=v_bottom_barocline(:,5);
-% v_barocline_use(:,11)=v_cstslope_barocline(:,11); v_barocline_use(:,18)= v_bottom_barocline(:,18); v_barocline_use(:,22)=v_cstslope_barocline(:,22);
-% v_barocline_use(:,27)=v_bottom_barocline(:,27); v_barocline_use(:,32)=v_bottom_barocline(:,32); v_barocline_use(:,34)=v_bottom_barocline(:,34);
-% v_barocline_use(:,35)=v_bottom_barocline(:,35); v_use(:,37)=v_cstslope_barocline(:,37); v_barocline_use(:,39)=v_bottom_barocline(:,39);
-% v_barocline_use(:,40)=v_cstslope_barocline(:,40); v_barocline_use(:,41)=v_bottom_barocline(:,41); v_barocline_use(:,42)=v_bottom_barocline(:,42);
-% v_barocline_use(:,43)=v_bottom_barocline(:,43); v_barocline_use(:,46)=v_bottom_barocline(:,46); v_barocline_use(:,47)=v_cstslope_barocline(:,47);
-% v_barocline_use(:,48)=v_cstslope_barocline(:,48); v_barocline_use(:,49)=v_bottom_barocline(:,49); v_barocline_use(:,63)=v_bottom_barocline(:,63);
-% 
-% v_barocline = v_barocline_use;
-% 
-% save('../matlab_output_RREX17/vitesse_abs/OS38_section_ride_use.mat','dpair_abs','v_abs','v_barocline', 'z_abs','lat_abs','lon_abs','Vref','Z_vref','ref_up_bott_triangle');
-% 
-% load('../matlab_output_RREX17/transport_geo/transport_RREX17_ride_polyfit','X','T_up_bott_tr');
-% 
-% %%% Transport surface-fond
-% tr_z=trsp_geo_tp(v_use,z_abs,dpair_abs);  tr_barocline=trsp_geo_tp(v_barocline_use,z_abs,dpair_abs); 
-% tr_z = tr_z*1e-06;                        tr_barocline = tr_barocline*1e-06;
-% 
-% for i=1:63; T_tot(i) = sum(tr_z(:,i)); end
-% for i=1:63; T_barocline(i) = sum(tr_barocline(:,i));  T_barotrope(i) = T_tot(i)-T_barocline(i); end
-% 
-% 
-% % Enregistrement du transport
-% save('../matlab_output_RREX17/transport_geo/transport_RREX17_ride_use' ,'X','T_tot','T_up_bott_tr','T_barocline','T_barotrope');
+clear all
+close all
+
+file_v_abs_polyfit = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/vitesse_abs/OS38_section_ride_polyfit';
+load(file_v_abs_polyfit); v_polyfit = v_abs; v_polyfit_barocline = v_barocline;
+file_v_abs_cstslope = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/vitesse_abs/OS38_section_ride_cstslope';
+load(file_v_abs_cstslope,'v_abs'); v_cstslope = v_abs; v_cstslope_barocline = v_barocline;
+file_v_abs_v_bottom = 'C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/vitesse_abs/OS38_section_ride_triangle_bottom';
+load(file_v_abs_v_bottom,'v_abs'); v_bottom = v_abs;  v_bottom_barocline = v_barocline;
+
+%polyfit:57,58,61,62,63,64,65,67,68,69,76,77,78,80,81,82,84,85,86,87,89,90,91,92,94,97,99,105,
+%106,111,112,113,114,115,116,117,118,119,120,121,122,123
+%cstslope:66,83,98,101,108,109
+%v_bottom:56,59,60,79,88,93,95,96,100,102,103,104,107, 110,124
+
+v_use= v_polyfit;
+v_use(:,1)=v_bottom(:,1);  v_use(:,4)=v_bottom(:,4); v_use(:,5)=v_bottom(:,5);
+v_use(:,11)=v_cstslope(:,11); v_use(:,18)= v_bottom(:,18); v_use(:,22)=v_cstslope(:,22);
+v_use(:,27)=v_bottom(:,27); v_use(:,32)=v_bottom(:,32); v_use(:,34)=v_bottom(:,34);
+v_use(:,35)=v_bottom(:,35); v_use(:,37)=v_cstslope(:,37); v_use(:,39)=v_bottom(:,39);
+v_use(:,40)=v_cstslope(:,40); v_use(:,41)=v_bottom(:,41); v_use(:,42)=v_bottom(:,42);
+v_use(:,43)=v_bottom(:,43); v_use(:,46)=v_bottom(:,46); v_use(:,47)=v_cstslope(:,47);
+v_use(:,48)=v_cstslope(:,48); v_use(:,49)=v_bottom(:,49); v_use(:,63)=v_bottom(:,63);
+
+v_abs = v_use;
+
+v_barocline_use= v_polyfit_barocline;
+v_barocline_use(:,1)=v_bottom_barocline(:,1);  v_barocline_use(:,4)=v_bottom_barocline(:,4); v_barocline_use(:,5)=v_bottom_barocline(:,5);
+v_barocline_use(:,11)=v_cstslope_barocline(:,11); v_barocline_use(:,18)= v_bottom_barocline(:,18); v_barocline_use(:,22)=v_cstslope_barocline(:,22);
+v_barocline_use(:,27)=v_bottom_barocline(:,27); v_barocline_use(:,32)=v_bottom_barocline(:,32); v_barocline_use(:,34)=v_bottom_barocline(:,34);
+v_barocline_use(:,35)=v_bottom_barocline(:,35); v_use(:,37)=v_cstslope_barocline(:,37); v_barocline_use(:,39)=v_bottom_barocline(:,39);
+v_barocline_use(:,40)=v_cstslope_barocline(:,40); v_barocline_use(:,41)=v_bottom_barocline(:,41); v_barocline_use(:,42)=v_bottom_barocline(:,42);
+v_barocline_use(:,43)=v_bottom_barocline(:,43); v_barocline_use(:,46)=v_bottom_barocline(:,46); v_barocline_use(:,47)=v_cstslope_barocline(:,47);
+v_barocline_use(:,48)=v_cstslope_barocline(:,48); v_barocline_use(:,49)=v_bottom_barocline(:,49); v_barocline_use(:,63)=v_bottom_barocline(:,63);
+
+v_barocline = v_barocline_use;
+
+%save('../matlab_output_RREX17/vitesse_abs/OS38_section_ride_use.mat','dpair_abs','v_abs','v_barocline', 'z_abs','lat_abs','lon_abs','Vref','Z_vref','ref_up_bott_triangle');
+
+load('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/transport_geo/transport_RREX17_ride_polyfit','X','T_up_bott_tr');
+
+%%% Transport surface-fond
+tr_z=trsp_geo_tp(v_use,z_abs,dpair_abs);  tr_barocline=trsp_geo_tp(v_barocline_use,z_abs,dpair_abs); 
+tr_z = tr_z*1e-06;                        tr_barocline = tr_barocline*1e-06;
+
+for i=1:63; T_tot(i) = sum(tr_z(:,i)); end
+for i=1:63; T_barocline(i) = sum(tr_barocline(:,i));  T_barotrope(i) = T_tot(i)-T_barocline(i); end
+
+
+% Enregistrement du transport
+save('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/transport_geo/transport_RREX17_ride_use' ,'X','T_tot','T_up_bott_tr','T_barocline','T_barotrope','tr_z','tr_barocline','z_vref_use');
 % 
 end

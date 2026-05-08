@@ -15,7 +15,6 @@ vmap(29,:) = 0.97; % Changes the middle of the cbar so it can be less white
 path2015='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/vitesse_abs/';
 path2017='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/vitesse_abs/';
 
-
 % It is important to have access to:
 % 1) Absolute velocity (Vgeo corrected by SADCP data)
 % 2) Bathymetry

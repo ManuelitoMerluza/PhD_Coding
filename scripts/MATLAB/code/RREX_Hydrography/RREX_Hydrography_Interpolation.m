@@ -8,8 +8,6 @@ set(0, 'DefaultAxesFontSize', 12);
 set(0, 'DefaultAxesTitleFontSizeMultiplier', 1.15)
 set(0, 'DefaultAxesFontName', 'LMRoman17');
 set(0, 'DefaultAxesFontWeight', 'bold');
-map = load('colormap_RREX.mat'); % colormap(map.cmap);
-load REXXBathymetry.mat
 
 
 %% First, we load the variables 
@@ -201,8 +199,49 @@ figname=fullfile(figpath, imgname);
 
 % Make the figure have minimal borders when saving
 set(gca, 'LooseInset', get(gca, 'TightInset'));
-print(gcf,figname, '-dpng', '-r0', '-loose')
+% print(gcf,figname, '-dpng', '-r0', '-loose')
 
 % save([folder 'RREX_Transects_Interpolated.mat'], '-struct' , 'RREX_Transects_Interpolated')
 
 
+%% This is If I want to interpolate into a same common grid (Not ready)
+
+% transect={'ride','south','ovide','north'};
+% section=transect{1};
+% 
+% if strcmp(section,'ride') % Defines x axis depending on the transect
+%     load([path2015 'transport_geo/transport_RREX15_' section '_use.mat'],'X','tr_z');
+%     load([path2015 'vitesse_abs/OS38_section_' section '_use.mat'],'v_abs','z_abs'); 
+%     v2015=v_abs; X2015=X; T2015=tr_z; p2015=gsw_p_from_z(repmat(-z_abs,[1 length(X)]),X);
+%     for i=1:length(X2015)
+%         lastIdx = find(~isnan(v2015(:,i)), 1, 'last');
+%         b2015(i) = p2015(lastIdx,i); % Finds bottom
+%     end
+% 
+%     load([path2017 'transport_geo/transport_RREX17_' section '_use.mat'],'X','tr_z');
+%     load([path2017 'vitesse_abs/OS38_section_' section '_use.mat'],'v_abs','z_abs','dpair_abs');
+%     v2017=v_abs; X2017=X; T2017=tr_z; p2017=gsw_p_from_z(repmat(-z_abs,[1 length(X)]),X);
+%     latlon='lat';
+%     for i=1:length(X2017)
+%         lastIdx = find(~isnan(v2017(:,i)), 1, 'last');
+%         b2017(i) = p2017(lastIdx,i); % Finds bottom
+%     end
+% 
+% else
+%     load([path2015 'transport_geo/transport_RREX15_' section '_pfit.mat'],'X','tr_z');
+%     load([path2015 'vitesse_abs/OS38_section_' section '_pfit.mat'],'v_abs','z_abs','lat_abs');
+%     v2015=v_abs; X2015=X; T2015=tr_z; z2015=z_abs; p2015=gsw_p_from_z(repmat(-z_abs,[1 length(lat_abs)]),lat_abs);
+%     for i=1:length(X2015)
+%         lastIdx = find(~isnan(v2015(:,i)), 1, 'last');
+%         b2015(i) = p2015(lastIdx,i); % Finds bottom
+%     end
+% 
+%     load([path2017 'transport_geo/transport_RREX17_' section '_pfit.mat'],'X','tr_z');
+%     load([path2017 'vitesse_abs/OS38_section_' section '_pfit.mat'],'v_abs','z_abs','lat_abs','dpair_abs');
+%     v2017=v_abs; X2017=X; T2017=tr_z; z2017=z_abs; p2017=gsw_p_from_z(repmat(-z_abs,[1 length(lat_abs)]),lat_abs);
+%     latlon='lon';
+%     for i=1:length(X2017)
+%         lastIdx = find(~isnan(v2017(:,i)), 1, 'last');
+%         b2017(i) = p2017(lastIdx,i); % Finds bottom
+%     end
+% end

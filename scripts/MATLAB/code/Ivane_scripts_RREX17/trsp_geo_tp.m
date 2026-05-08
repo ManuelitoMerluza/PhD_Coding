@@ -1,4 +1,4 @@
-function tr=trsp_geo_tp(u,zl,dpair)
+function [tr, dz]=trsp_geo_tp(u,zl,dpair)
 
 % calcul du transport tr(npair) associé au champ de vitesse u, entre deux
 % limites de profondeur fixées
@@ -12,19 +12,24 @@ function tr=trsp_geo_tp(u,zl,dpair)
 % initialisations
 npair=size(u,2); tr=NaN(length(zl),npair);
 
-
 % on remplace les vitesse à NaN par zero, par facilité
 u(isnan(u))=0;
 
 % on calcule le deltaz sur la verticale
 zl=zl(:); 
-zl=zl(~isnan(zl)); za=zl(1:end-1); zb=zl(2:end); dz=zb-za; dz1=[0;dz]; dz2=[dz;0];
+
+lastIdx = find(~isnan(zl), 1, 'last'); %finds last valid value
+zl(isnan(zl))=zl(lastIdx); 
+
+%zl=zl(~isnan(zl));
+za=zl(1:end-1); zb=zl(2:end); dz=zb-za; dz1=[0;dz]; dz2=[dz;0];
 dz=0.5*(dz2+dz1);
 
 for ip=1:npair
 
     % on calcule les transports
     tr(:,ip)= u(:,ip).*dz(:).*dpair(ip);
-    
+
 end
+
 end
