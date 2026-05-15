@@ -776,6 +776,59 @@ sgtitle('RREX Cruise Comparison - Water Masses','FontSize',17, 'FontWeight', 'bo
 
 % saveas(gcf,'7b.TSDiagram_AllStations.png')
 
+%% The same but in temperature-oxygen space
+
+figure(); set(gcf, 'Position',  [100, 100, 1700, 700])
+subplot(1,2,1)
+h1 = scatter(o2015(NACW2015), t2015(NACW2015), 5, 'blue', 'filled');
+hold on;
+h2 = scatter(o2015(SAW2015), t2015(SAW2015), 5, 'filled','MarkerFaceColor', [0.50196, 0, 0.12549]);
+h3 = scatter(o2015(SAIW2015), t2015(SAIW2015), 5, 'cyan', 'filled');
+h4 = scatter(o2015(IW2015), t2015(IW2015), 5, 'filled','MarkerFaceColor', [0.75 0.75 0.75]);
+h5 = scatter(o2015(SPMW2015), t2015(SPMW2015), 5, 'green', 'filled');
+h6 = scatter(o2015(LSW2015), t2015(LSW2015), 5, 'yellow', 'filled');
+h7 = scatter(o2015(ISW2015), t2015(ISW2015), 5, 'filled', 'MarkerFaceColor', [1 0.5 0]);
+h8 = scatter(o2015(LDW2015), t2015(LDW2015), 5, 'filled','MarkerFaceColor', [0.5 0 0.5]);
+h9 = scatter(o2015(ISOW2015), t2015(ISOW2015), 5, 'red', 'filled');
+xlim([220 320]); ylim([1 11])
+% [c,h]=contour(si,thetai,sigma_sca,density_levels,'--k');
+% clabel(c, h,'FontSize', 11, 'FontWeight', 'bold','LabelSpacing', 120, 'Color', 'k');
+xlabel('Salinity','FontSize',13)
+ylabel('Potential Temperature','FontSize',13)
+title('2015','FontSize',16)
+grid on
+hold off
+legend([h1, h2, h3, h4, h5, h6, h7, h8, h9], ...
+       {'NACW', 'SAW', 'SAIW', 'IW', 'SPMW', 'LSW', 'ISW', 'LDW', 'ISOW'}, ...
+       'Location', 'southeast', 'NumColumns', 2, ...
+       'FontSize', 10, 'FontWeight', 'bold');
+
+subplot(1,2,2)
+h1=scatter(o2017(NACW2017),t2017(NACW2017),5,'blue','filled');
+hold on
+h2=scatter(o2017(SAW2017),t2017(SAW2017),5,'filled','MarkerFaceColor',[0.50196, 0, 0.12549]); % Burgundy 
+h3=scatter(o2017(SAIW2017),t2017(SAIW2017),5,'cyan','filled');
+h4=scatter(o2017(IW2017),t2017(IW2017),5,'filled','MarkerFaceColor',[.75 .75 .75]); % Light grey
+h5=scatter(o2017(SPMW2017),t2017(SPMW2017),5,'green','filled');
+h6=scatter(o2017(LSW2017),t2017(LSW2017),5,'yellow','filled');
+h7=scatter(o2017(ISW2017),t2017(ISW2017),5,'filled','MarkerFaceColor',[1 0.5 0]); % Orange
+h8=scatter(o2017(LDW2017),t2017(LDW2017),5,'filled','MarkerFaceColor',[0.5 0 0.5]); % Purple
+h9=scatter(o2017(ISOW2017),t2017(ISOW2017),5,'red','filled');
+xlim([220 320]); ylim([1 11])
+% [c,h]=contour(si,thetai,sigma_sca,density_levels,'--k');
+% clabel(c, h,'FontSize', 11, 'FontWeight', 'bold','LabelSpacing', 120, 'Color', 'k');
+xlabel('Salinity','FontSize',13)
+title('2017','FontSize',16)
+grid on
+hold off
+legend([h1, h2, h3, h4, h5, h6, h7, h8, h9], ...
+       {'NACW', 'SAW', 'SAIW', 'IW', 'SPMW', 'LSW', 'ISW', 'LDW', 'ISOW'}, ...
+       'Location', 'southeast', 'NumColumns', 2, ...
+       'FontSize', 10, 'FontWeight', 'bold');
+
+
+sgtitle('RREX Cruise Comparison - Water Masses','FontSize',17, 'FontWeight', 'bold','FontName','LMRoman10')
+
 %% T-S Diagram of the Ridge
 
 a=ridge_2015; b=ridge_2017;

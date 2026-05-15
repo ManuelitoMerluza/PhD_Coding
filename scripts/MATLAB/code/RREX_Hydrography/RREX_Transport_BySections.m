@@ -17,12 +17,66 @@ Ekpath2015='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX
 
 % It is important to have access to:
 % 1) Transport between stations
-% 2) Ekman Transport (WHICH I STILL HAVEN'T CONSIDERED)
+% 2) Ekman Transport
+% 3) Original CTD data (for determining density layers)
 
 %% First lets define the transect and load the variables
 
 transect={'ride','south','ovide','north'};
 
+% This is a modified version of the stations where I exclude the last one
+% in order to compare to the transports locations (N = number of stations-1)
+ridge_2015=[68:84 89:102 110:132];
+north_2015=46:66;
+ovide_2015=26:44;
+south_2015=[3:10 15 16 21:24];
+
+ridge_2017=[56:69 76:124];
+south_2017=[1:8 11:16];
+ovide_2017=[18:20 22:24 27:28 43:-1:41 38:-1:32];
+north_2017=[44:55 56];
+
+%% Loads and Defines density ranges
+
+folder='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Hydrography';
+filenames = dir(fullfile(folder,'*CTDO.nc')); % Check the variable position
+
+dens2015_CTD=ncread(filenames(1).name,'SIG0'); % Density anomaly referred to p=0
+% Calculates density in the middle points in order to compare to transport
+dens2015_CTD= (dens2015_CTD(:,1:end-1)+dens2015_CTD(:,2:end))*0.5;
+
+dens2017_CTD=ncread(filenames(2).name,'SIG0'); dens2017_CTD=dens2017_CTD(:,2:end);
+dens2017_CTD= (dens2017_CTD(:,1:end-1)+dens2017_CTD(:,2:end))*0.5;
+
+layer1_2015=dens2015_CTD < 27.52; 
+layer1_2017=dens2017_CTD < 27.52;
+
+layer2_2015=dens2015_CTD >= 27.52 & dens2015_CTD<27.71;
+layer2_2017=dens2017_CTD >= 27.52 & dens2017_CTD<27.71; 
+
+layer3_2015=dens2015_CTD >= 27.71 & dens2015_CTD<27.8;
+layer3_2017=dens2017_CTD >= 27.71 & dens2017_CTD<27.8;
+
+layer4_2015=dens2015_CTD >= 27.8;
+layer4_2017=dens2017_CTD >= 27.8;
+
+transects2015={ridge_2015, south_2015, ovide_2015, north_2015};
+transects2017={ridge_2017, south_2017, ovide_2017, north_2017};
+clear ridge_2015 ridge_2017 south_2015 south_2017 ovide_2015 ovide_2017 north_2015 north_2017
+
+% %% The same process but for the different layers
+% 
+% % Selects the stations from the layers
+% layer1 = layer1_2015(:,transects2015{1}); layer2 = layer2_2015(:,transects2015{1}); 
+% layer3 = layer3_2015(:,transects2015{1}); layer4 = layer4_2015(:,transects2015{1}); 
+% 
+% % Calculates the transport between layers
+% for i=1:length(transects2015{1})
+%     tr1=tr_z(layer1(:,i),i); tr2=tr_z(layer2(:,i),i);
+%     tr3=tr_z(layer3(:,i),i); tr4=tr_z(layer4(:,i),i);
+%     T_layer1(i) = sum(tr1); T_layer2(i) = sum(tr2);
+%     T_layer3(i) = sum(tr3); T_layer4(i) = sum(tr4); 
+% end
 
 %% Ridge
 
@@ -63,9 +117,13 @@ T_ride_nac=sum(T(31:49));
 T_ride_end=sum(T(50:62));
 
 T_ride2017=round([T_ride_end T_ride_nac T_ride_south T_ride_ovide],1);
-% display(T_ride2017)
 
-save('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/RREX_T_tot_ridge.mat',"T_ride2017","T_ride2015","T_sum2015","X_sum2015","T_sum2017","X_sum2017");
+% We repeat the same process but separating by layers
+
+% We save the variables
+% save('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/RREX_T_tot_ridge.mat',"T_ride2017","T_ride2015", ...
+%     "T_sum2015","X_sum2015","T_sum2017","X_sum2017");
+
 
 %% South
 
@@ -87,7 +145,7 @@ X_sum2015=X_ctd; T_sum2015=[T_sum2(1:8); T_sum1];
 T_south_west=T_sum1(6) ; % South transect west of ridge
 T_south_east=T_sum2(1) ; % South transect east of ridge
 
-T_south2015=round([T_south_west T_south_east],1)
+T_south2015=round([T_south_west T_south_east],1);
 
 load([path2017 'transport_RREX17_' transect{2} '_pfit.mat']);
 Eksouth2017 = load([Ekpath2017 'trsp_ek_' transect{2} '_era_moyenne.mat']);
@@ -102,7 +160,7 @@ T_south_east=T_sum1(7) ; % South transect east of ridge
 
 T_south2017=round([T_south_west T_south_east],1);
 
-save('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/RREX_T_tot_south.mat',"T_south2017","T_south2015","T_sum2015","X_sum2015","T_sum2017","X_sum2017");
+%save('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/RREX_T_tot_south.mat',"T_south2017","T_south2015","T_sum2015","X_sum2015","T_sum2017","X_sum2017");
 
 %% OVIDE
 
@@ -126,11 +184,12 @@ X_sum2015=X_ctd; T_sum2015=[T_sum1; T_sum2(2:end)];
 T_ovide_west=T_sum1(4) ; % OVIDE transect west of ridge
 T_ovide_east=T_sum2(6) ; % OVIDE transect east of ridge
 
-T_ovide2015=round([T_ovide_west T_ovide_east],1)
+T_ovide2015=round([T_ovide_west T_ovide_east],1);
 
 % 2017
 
 load([path2017 'transport_RREX17_' transect{3} '_pfit.mat']);
+%load([path2017 'tr_z_RREX17_' transect{3} '_pfit.mat'],'tr_z'); T_tot=sum(tr_z,1);
 Ekovide2017 = load([Ekpath2017 'trsp_ek_' transect{3} '_era_moyenne.mat']);
 T_tot=T_tot+(Ekovide2017.tr_ek)'; % Total transport
 
@@ -146,9 +205,9 @@ X_sum2017=X; T_sum2017=[T_sum1 T_sum2(2:end)];
 T_ovide_west=T_sum2017(6) ; % OVIDE transect west of ridge
 T_ovide_east=T_sum2017(16) ; % OVIDE transect east of ridge
 
-T_ovide2017=round([T_ovide_west T_ovide_east],1);
+T_ovide2017=round([T_ovide_west T_ovide_east],1)
 
-save('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/RREX_T_tot_ovide.mat',"T_ovide2017","T_ovide2015","T_sum2015","X_sum2015","T_sum2017","X_sum2017");
+% save('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/RREX_T_tot_ovide.mat',"T_ovide2017","T_ovide2015","T_sum2015","X_sum2015","T_sum2017","X_sum2017");
 
 %% North
 
@@ -181,7 +240,6 @@ load([path2017 'transport_RREX17_' transect{4} '_cstslope.mat'])
 Eknorth2017 = load([Ekpath2017 'trsp_ek_' transect{4} '_era_moyenne.mat']);
 T_tot=T_tot+(Eknorth2017.tr_ek)'; % Total transport
 
-
 T_sum1=zeros(1,13); T_sum1(1:end-1)=T_tot;
 T_sum1=cumsum(T_sum1,'reverse');
 
@@ -190,4 +248,4 @@ T_north_west=T_sum1(8) ; % north transect west of ridge
 X_sum2017=X; T_sum2017=T_sum1;
 T_north2017=round(T_north_west,1);
 
-save('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/RREX_T_tot_north.mat',"T_north2017","T_north2015","T_sum2015","X_sum2015","T_sum2017","X_sum2017");
+% save('C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/RREX_T_tot_north.mat',"T_north2017","T_north2015","T_sum2015","X_sum2015","T_sum2017","X_sum2017");

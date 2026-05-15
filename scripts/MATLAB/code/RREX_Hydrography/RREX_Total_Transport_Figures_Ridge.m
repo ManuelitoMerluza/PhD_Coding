@@ -38,7 +38,7 @@ figtitle=figtitle{q}; % Title for the figure
 imgname={'05Ttot_ridge.png','06.Ttot_south.png','07.Ttot_ovide.png','08.Ttot_north.png'};
 imgname=imgname{q}; % Name of the image being stored
 
-xlims=[48 64; -38.1 -31.3;-37.3 -27.3 ;-34 -21];
+xlims=[48 64; -38.1 -31.3;-37.3 -27.3 ;-34.5 -20];
 xlims=xlims(q,:); % x axis limits for plotting each transect
 
 %% Loads and aranged the Bathymetry for both cruises
