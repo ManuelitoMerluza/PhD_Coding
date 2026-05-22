@@ -212,7 +212,7 @@ imgname={'10a.T_layer_ridge2015.png','10b.T_layer_ridge2017.png','10c.T_layer_ri
 figname=fullfile(figpath, imgname{1});
 
 %set(gca, 'LooseInset', get(gca, 'TightInset'));
-print(gcf,figname, '-dpng', '-r0', '-loose')
+%print(gcf,figname, '-dpng', '-r0', '-loose')
 
 %% 2017
 
@@ -269,7 +269,7 @@ hold off
 figname=fullfile(figpath, imgname{2});
 
 %set(gca, 'LooseInset', get(gca, 'TightInset'));
-print(gcf,figname, '-dpng', '-r0', '-loose')
+% print(gcf,figname, '-dpng', '-r0', '-loose')
 
 %% We plot again, but adding both cruises to the same figure
 
@@ -350,4 +350,4 @@ hold off
 figname=fullfile(figpath, imgname{3});
 
 %set(gca, 'LooseInset', get(gca, 'TightInset'));
-print(gcf,figname, '-dpng', '-r0', '-loose')
+% print(gcf,figname, '-dpng', '-r0', '-loose')

@@ -4,8 +4,8 @@ lon = double(ncread('etopo2.nc','x'));   % vector, degrees east (might be 0..360
 z   = double(ncread('etopo2.nc','z'));     % matrix (lat x lon) or (lon x lat) — check orientation
 
 % Define target box
-latmin = 50; latmax = 65;
-lonmin = -40; lonmax = -20;  % W longitudes (negative)
+latmin = 30; latmax = 80;
+lonmin = -60; lonmax = 0;  % W longitudes (negative)
 
 % Ensure lon vector uses -180..180
 if any(lon > 180)

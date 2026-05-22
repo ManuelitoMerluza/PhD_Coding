@@ -56,19 +56,6 @@ gamma2017 = eos80_legacy_gamma_n(sal2017,temp2017,pres2017,loni2017,lati2017);
 temp2015 = gsw_pt_from_t(SA2015,temp2015,pres2015);
 temp2017 = gsw_pt_from_t(SA2017,temp2017,pres2017);
 
-%% We make a matrix for testing the pythons OMP
-% It's a column vector version of all variables without NaNs
-
-lat=lati2015(:); lon=loni2015(:); temp=CT2015(:); sal=SA2015(:); dens=gamma2015(:);
-oxy=oxy2015(:); pres=pres2015(:);
-
-
-valid_idx = ~isnan(temp) & ~isnan(sal) & ~isnan(dens) & ~isnan(oxy);
-lat=lat(valid_idx); lon=lon(valid_idx); temp=temp(valid_idx); oxy=oxy(valid_idx);
-sal=sal(valid_idx); dens=dens(valid_idx); pres=pres(valid_idx);
-
-save('RREX_Test.mat','lat','lon',"dens","sal","temp","oxy","pres");
-
 
 %% First, we take a look at the amount of data to see how we can separate it in transects
 % 
