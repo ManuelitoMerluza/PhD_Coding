@@ -27,16 +27,16 @@ N2015=ncread(filenames(1).name,'BRV2'); % Brunt Vaisala frequency squared
 f2015=ncread(filenames(1).name,'VORP'); % Planetary Vorticity
 n2015=length(lat2015);
 
-lat2017=ncread(filenames(2).name,'LATITUDE');
-lon2017=ncread(filenames(2).name,'LONGITUDE');
-bottom2017=ncread(filenames(2).name,'BOTTOM_DEPTH');
-pres2017=ncread(filenames(2).name,'PRES'); % Pressure
-temp2017=ncread(filenames(2).name,'TEMP'); % In situ temperature
-sal2017=ncread(filenames(2).name,'PSAL'); % Practical Salinity
-oxy2017=ncread(filenames(2).name,'OXYK'); % Oxygen concentration in umol/kg
-dens2017=ncread(filenames(2).name,'SIG0'); % Density anomaly referred to p=0
-N2017=ncread(filenames(2).name,'BRV2'); % Brunt Vaisala frequency squared
-f2017=ncread(filenames(2).name,'VORP'); % Planetary Vorticity
+lat2017=ncread(filenames(2).name,'LATITUDE',2,inf);
+lon2017=ncread(filenames(2).name,'LONGITUDE',2,inf);
+bottom2017=ncread(filenames(2).name,'BOTTOM_DEPTH',2,inf);
+pres2017=ncread(filenames(2).name,'PRES',[1 2],[inf inf]); % Pressure
+temp2017=ncread(filenames(2).name,'TEMP',[1 2],[inf inf]); % In situ temperature
+sal2017=ncread(filenames(2).name,'PSAL',[1 2],[inf inf]); % Practical Salinity
+oxy2017=ncread(filenames(2).name,'OXYK',[1 2],[inf inf]); % Oxygen concentration in umol/kg
+dens2017=ncread(filenames(2).name,'SIG0',[1 2],[inf inf]); % Density anomaly referred to p=0
+N2017=ncread(filenames(2).name,'BRV2',[1 2],[inf inf]); % Brunt Vaisala frequency squared
+f2017=ncread(filenames(2).name,'VORP',[1 2],[inf inf]); % Planetary Vorticity
 n2017=length(lat2017);
 
 %% Calculates potential temperature and absolute salinity
@@ -112,320 +112,355 @@ temp2017 = gsw_pt_from_t(SA2017,temp2017,pres2017);
 
 %% Plot of map and stations of both 2015 and 2017
 
-figure(); set(gcf, 'Position',  [100, 100, 950, 575])
-ax1 = axes('Position',[0.07 0.12 0.86 0.78]); % adjust margins
-pcolor(lonsub,latsub,zsub); shading flat
-cm=colormap(ax1,flipud(slanCM('blues'))); caxis(ax1,[-4500 0]);
-colorbar
-
-% Now lets add the scatter plot
-
-% Top axes: transparent for scatter (same position)
-ax2 = axes('Position', ax1.Position);
-ax2.Color = 'none';                      % transparent
-ax2.XLim = ax1.XLim; ax2.YLim = ax1.YLim;
-ax2.FontSize = 13;
-hold(ax2,'on')
-
-
-% Plot scatter on ax2
-s1 = scatter(ax2,lon2015, lat2015, 80, 'filled','MarkerFaceColor', 'black','MarkerEdgeColor','red','MarkerFaceAlpha',0.9);
-s2 = scatter(ax2,lon2017, lat2017, 80, 'filled','MarkerFaceColor', [0.5 0.5 0.5],'MarkerEdgeColor','green','MarkerFaceAlpha',0.5);
-ax2.XTick = []; ax2.YTick = [];           % hide duplicate ticks if desired
-xlabel(ax1,'Longitude'); ylabel(ax1,'Latitude');
-linkaxes([ax1 ax2]) 
-
-legend([s1, s2], ...
-       {'2015','2017'}, ...
-       'Location', 'southeast', 'NumColumns', 2, ...
-       'FontSize', 14, 'FontWeight', 'bold');
-% Make an invisible colorbar
-cb = colorbar; set(cb, 'Visible', 'off');
-hold off
-
-% saveas(gcf,'0.Hydrography_Locations.png')
+% figure(); set(gcf, 'Position',  [100, 100, 950, 575])
+% ax1 = axes('Position',[0.07 0.12 0.86 0.78]); % adjust margins
+% pcolor(lonsub,latsub,zsub); shading flat
+% cm=colormap(ax1,flipud(slanCM('blues'))); caxis(ax1,[-4500 0]);
+% colorbar
+% 
+% % Now lets add the scatter plot
+% 
+% % Top axes: transparent for scatter (same position)
+% ax2 = axes('Position', ax1.Position);
+% ax2.Color = 'none';                      % transparent
+% ax2.XLim = ax1.XLim; ax2.YLim = ax1.YLim;
+% ax2.FontSize = 13;
+% hold(ax2,'on')
+% 
+% 
+% % Plot scatter on ax2
+% s1 = scatter(ax2,lon2015, lat2015, 80, 'filled','MarkerFaceColor', 'black','MarkerEdgeColor','red','MarkerFaceAlpha',0.9);
+% s2 = scatter(ax2,lon2017, lat2017, 80, 'filled','MarkerFaceColor', [0.5 0.5 0.5],'MarkerEdgeColor','green','MarkerFaceAlpha',0.5);
+% ax2.XTick = []; ax2.YTick = [];           % hide duplicate ticks if desired
+% xlabel(ax1,'Longitude'); ylabel(ax1,'Latitude');
+% linkaxes([ax1 ax2]) 
+% 
+% legend([s1, s2], ...
+%        {'2015','2017'}, ...
+%        'Location', 'southeast', 'NumColumns', 2, ...
+%        'FontSize', 14, 'FontWeight', 'bold');
+% % Make an invisible colorbar
+% cb = colorbar; set(cb, 'Visible', 'off');
+% hold off
+% 
+% % saveas(gcf,'0.Hydrography_Locations.png')
 
 
 %% Separation of transects
 
-ridge_2015=[68:84 89:102 110:125];
-southridge_2015=126:133;
-eastridge_2015=46:55;
-westridge_2015=56:67;
-trans2_2015=26:45;
-trans1_2015=[3:10 15 16 21:25];
+ride_2015=[68:84 89:102 110:133];
+north_2015=46:67;
+ovide_2015=26:45;
+south_2015=[3:10 15 16 21:25];
 
-ridge_2017=[57:70 77:86 92:114];
-southridge_2017=115:126;
-trans1_2017=[2:9 12:18];
-trans2_2017=[19:29 31:39 41:44];
-westridge_2017=45:56;
+ride_2017=[56:69 76:125];
+south_2017=[1:8 11:17];
+ovide_2017=[18:20 22:24 27:28 43:-1:41 38:-1:31];
+north_2017=[44:55 57];
+
+titles = {'Ridge', 'South', 'OVIDE', 'North'};
+transects2015={ride_2015, south_2015, ovide_2015, north_2015};
+transects2017={ride_2017, south_2017, ovide_2017, north_2017};
+
+xlims=[48.5 63.5; -38.1 -31.3;-37.3 -27.3 ;-34.1 -20.9];
+ylims=[100 4500; 100 3000; 100 3000; 100 3000];
+
+figpath='C:\Users\mitg1n25\Desktop\PhD\PhD_Coding\docs\figures\Hydrography_RREX';
+imgnametrans={'01.RREX_Transect_ridge.png','02.RREX_Transect_south.png','03.RREX_Transect_ovide.png','04.RREX_Transect_north.png'};
 
 %% Ploting transects: ridge
 
-a=ridge_2015; b=ridge_2017;
+q=1; 
+a=transects2015{q}; b=transects2017{q};
+
 
 figure(); set(gcf, 'Position',  [100, 100, 1700, 700])
-ax1=subplot(2,4,1);
+t=tiledlayout(2,4,"TileSpacing","compact","Padding","compact");
+
+ax1=nexttile;
 pcolor(lat2015(a),pres2015(:,a),temp2015(:,a)); shading flat
 c=colorbar; caxis([2 10]); colormap(ax1,slanCM('turbo'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 ylabel('Pressure [dbar]'); title('\theta [°C]');
 hold on; h=area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6], ...
     'edgecolor','k');
 hold off
 
-ax2=subplot(2,4,2);
+ax2=nexttile;
 pcolor(lat2015(a),pres2015(:,a),sal2015(:,a)); shading flat
 c=colorbar; caxis([34.6 35.2]); colormap(ax2,slanCM('haline'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 %c.Label.String = '[PSU]';
 title('Salinity [PSU]');
 hold on; h=area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
 
-ax3=subplot(2,4,3);
+ax3=nexttile;
 pcolor(lat2015(a),pres2015(:,a),dens2015(:,a)); shading flat
 c=colorbar; caxis([27.4 28]); colormap(ax3,slanCM('gnuplot2'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 %c.Label.String = '[kg/m^3]'; %xlabel('Latitude °N')
 title('\sigma_0 [kg/m^3]');
 hold on; area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
-ax4=subplot(2,4,4);
+ax4=nexttile;
 pcolor(lat2015(a),pres2015(:,a),oxy2015(:,a)); shading flat
 c=colorbar; caxis([240 300]); colormap(ax4,slanCM('jet'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 title('DO [\mumol/kg]');
 hold on; area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
-
-ax5=subplot(2,4,5);
+ax5=nexttile;
 pcolor(lat2017(b),pres2017(:,b),temp2017(:,b)); shading flat
 c=colorbar; caxis([2 10]); colormap(ax5,slanCM('turbo'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 ylabel('Pressure [dbar]'); xlabel('Latitude °N')
 hold on; area(lat2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
-ax6=subplot(2,4,6);
+ax6=nexttile;
 pcolor(lat2017(b),pres2017(:,b),sal2017(:,b)); shading flat
 c=colorbar; caxis([34.6 35.2]); colormap(ax6,slanCM('haline'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 xlabel('Latitude °N')
 hold on; area(lat2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
-ax7=subplot(2,4,7);
+ax7=nexttile;
 pcolor(lat2017(b),pres2017(:,b),dens2017(:,b)); shading flat
 c=colorbar; caxis([27.4 28]); colormap(ax7,slanCM('gnuplot2'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 xlabel('Latitude °N')
 hold on; area(lat2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
-ax8=subplot(2,4,8);
+ax8=nexttile;
 pcolor(lat2017(b),pres2017(:,b),oxy2017(:,b)); shading flat
 c=colorbar; caxis([240 300]); colormap(ax8,slanCM('jet'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 xlabel('Latitude °N')
 hold on; area(lat2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
 sgtitle('Along-Ridge Transect','FontSize',17, 'FontWeight', 'bold','FontName','LMRoman10')
 
-% saveas(gcf,'1.Hydrography_ridge.png')
+imgname=imgnametrans{q}; % Name of the image being stored
+figname=fullfile(figpath, imgname);
+% Save the figure
+set(gca, 'LooseInset', get(gca, 'TightInset'));
+print(gcf,figname, '-dpng', '-r0', '-loose')
 
 %% Ploting transects: Transect 1 (south one)
 
-a=trans1_2015; b=trans1_2017;
+q=2; 
+a=transects2015{q}; b=transects2017{q};
 
 figure(); set(gcf, 'Position',  [100, 100, 1700, 700])
-ax1=subplot(2,4,1);
+t=tiledlayout(2,4,"TileSpacing","compact","Padding","compact");
+
+ax1=nexttile;
 pcolor(lon2015(a),pres2015(:,a),temp2015(:,a)); shading flat
 c=colorbar; caxis([2 10]); colormap(ax1,slanCM('turbo'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 ylabel('Pressure [dbar]'); title('\theta [°C]');
 hold on; area(lon2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
-ax2=subplot(2,4,2);
+ax2=nexttile;
 pcolor(lon2015(a),pres2015(:,a),sal2015(:,a)); shading flat
 c=colorbar; caxis([34.6 35.2]); colormap(ax2,slanCM('haline'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 title('Salinity [PSU]');
 hold on; area(lon2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
-ax3=subplot(2,4,3);
+ax3=nexttile;
 pcolor(lon2015(a),pres2015(:,a),dens2015(:,a)); shading flat
 c=colorbar; caxis([27.4 28]); colormap(ax3,slanCM('gnuplot2'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 title('\sigma_0 [kg/m^3]');
 hold on; area(lon2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
-ax4=subplot(2,4,4);
+ax4=nexttile;
 pcolor(lon2015(a),pres2015(:,a),oxy2015(:,a)); shading flat
 c=colorbar; caxis([240 300]); colormap(ax4,slanCM('jet'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 title('DO [\mumol/kg]');
 hold on; area(lon2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
-ax5=subplot(2,4,5);
+ax5=nexttile;
 pcolor(lon2017(b),pres2017(:,b),temp2017(:,b)); shading flat
 c=colorbar; caxis([2 10]); colormap(ax5,slanCM('turbo'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 ylabel('Pressure [dbar]'); xlabel('Longitude °W')
 hold on; area(lon2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
-ax6=subplot(2,4,6);
+ax6=nexttile;
 pcolor(lon2017(b),pres2017(:,b),sal2017(:,b)); shading flat
 c=colorbar; caxis([34.6 35.2]); colormap(ax6,slanCM('haline'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 xlabel('Longitude °W')
 hold on; area(lon2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
-ax7=subplot(2,4,7);
+ax7=nexttile;
 pcolor(lon2017(b),pres2017(:,b),dens2017(:,b)); shading flat
 c=colorbar; caxis([27.4 28]); colormap(ax7,slanCM('gnuplot2'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 xlabel('Longitude °W')
 hold on; area(lon2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
-ax8=subplot(2,4,8);
+ax8=nexttile;
 pcolor(lon2017(b),pres2017(:,b),oxy2017(:,b)); shading flat
 c=colorbar; caxis([240 300]); colormap(ax8,slanCM('jet'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 xlabel('Longitude °W')
 hold on; area(lon2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
-sgtitle('Cross-Ridge Transect 1','FontSize',17, 'FontWeight', 'bold','FontName','LMRoman10')
+sgtitle('Cross-Ridge Transect 1 (South)','FontSize',17, 'FontWeight', 'bold','FontName','LMRoman10')
 
-% saveas(gcf,'2.Hydrography_transect1xridge.png')
+imgname=imgnametrans{q}; % Name of the image being stored
+figname=fullfile(figpath, imgname);
+% Save the figure
+set(gca, 'LooseInset', get(gca, 'TightInset'));
+print(gcf,figname, '-dpng', '-r0', '-loose')
 
-%% Ploting transects: Transect 2 (north one)
+%% Ploting transects: Transect 2 (OVIDE)
 
-a=trans2_2015; b=trans2_2017;
+q=3; 
+a=transects2015{q}; b=transects2017{q};
 
 figure(); set(gcf, 'Position',  [100, 100, 1700, 700])
-ax1=subplot(2,4,1);
+t=tiledlayout(2,4,"TileSpacing","compact","Padding","compact");
+
+ax1=nexttile;
 pcolor(lon2015(a),pres2015(:,a),temp2015(:,a)); shading flat
 c=colorbar; caxis([2 10]); colormap(ax1,slanCM('turbo'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 ylabel('Pressure [dbar]'); title('\theta [°C]');
 hold on; area(lon2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
-ax2=subplot(2,4,2);
+ax2=nexttile;
 pcolor(lon2015(a),pres2015(:,a),sal2015(:,a)); shading flat
 c=colorbar; caxis([34.6 35.2]); colormap(ax2,slanCM('haline'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 title('Salinity [PSU]');
 hold on; area(lon2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
-ax3=subplot(2,4,3);
+ax3=nexttile;
 pcolor(lon2015(a),pres2015(:,a),dens2015(:,a)); shading flat
 c=colorbar; caxis([27.4 28]); colormap(ax3,slanCM('gnuplot2'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 title('\sigma_0 [kg/m^3]');
 hold on; area(lon2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
-ax4=subplot(2,4,4);
+ax4=nexttile;
 pcolor(lon2015(a),pres2015(:,a),oxy2015(:,a)); shading flat
 c=colorbar; caxis([240 300]); colormap(ax4,slanCM('jet'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 title('DO [\mumol/kg]');
 hold on; area(lon2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
-ax5=subplot(2,4,5);
+ax5=nexttile;
 pcolor(lon2017(b),pres2017(:,b),temp2017(:,b)); shading flat
 c=colorbar; caxis([2 10]); colormap(ax5,slanCM('turbo'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 ylabel('Pressure [dbar]'); xlabel('Longitude °W')
 hold on; area(lon2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
-ax6=subplot(2,4,6);
+ax6=nexttile;
 pcolor(lon2017(b),pres2017(:,b),sal2017(:,b)); shading flat
 c=colorbar; caxis([34.6 35.2]); colormap(ax6,slanCM('haline'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 xlabel('Longitude °W')
 hold on; area(lon2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
-ax7=subplot(2,4,7);
+ax7=nexttile;
 pcolor(lon2017(b),pres2017(:,b),dens2017(:,b)); shading flat
 c=colorbar; caxis([27.4 28]); colormap(ax7,slanCM('gnuplot2'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 xlabel('Longitude °W')
 hold on; area(lon2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
-ax8=subplot(2,4,8);
+ax8=nexttile;
 pcolor(lon2017(b),pres2017(:,b),oxy2017(:,b)); shading flat
 c=colorbar; caxis([240 300]); colormap(ax8,slanCM('jet'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 xlabel('Longitude °W')
 hold on; area(lon2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
 sgtitle('Cross-Ridge Transect 2 (OVIDE)','FontSize',17, 'FontWeight', 'bold','FontName','LMRoman10')
 
-% saveas(gcf,'3.Hydrography_transect2xridge.png')
+imgname=imgnametrans{q}; % Name of the image being stored
+figname=fullfile(figpath, imgname);
+% Save the figure
+set(gca, 'LooseInset', get(gca, 'TightInset'));
+print(gcf,figname, '-dpng', '-r0', '-loose')
 
 %% Ploting transects: Transect 4 (north-west of ridge)
 
-a=westridge_2015; b=westridge_2017;
+q=4; 
+a=transects2015{q}; b=transects2017{q};
 
 figure(); set(gcf, 'Position',  [100, 100, 1700, 700])
-ax1=subplot(2,4,1);
+t=tiledlayout(2,4,"TileSpacing","compact","Padding","compact");
+
+ax1=nexttile;
 pcolor(lon2015(a),pres2015(:,a),temp2015(:,a)); shading flat
 c=colorbar; caxis([2 10]); colormap(ax1,slanCM('turbo'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 ylabel('Pressure [dbar]'); title('\theta [°C]');
 hold on; area(lon2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
-ax2=subplot(2,4,2);
+ax2=nexttile;
 pcolor(lon2015(a),pres2015(:,a),sal2015(:,a)); shading flat
 c=colorbar; caxis([34.6 35.2]); colormap(ax2,slanCM('haline'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 title('Salinity [PSU]');
 hold on; area(lon2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
-ax3=subplot(2,4,3);
+ax3=nexttile;
 pcolor(lon2015(a),pres2015(:,a),dens2015(:,a)); shading flat
 c=colorbar; caxis([27.4 28]); colormap(ax3,slanCM('gnuplot2'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 title('\sigma_0 [kg/m^3]');
 hold on; area(lon2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
-ax4=subplot(2,4,4);
+ax4=nexttile;
 pcolor(lon2015(a),pres2015(:,a),oxy2015(:,a)); shading flat
 c=colorbar; caxis([240 300]); colormap(ax4,slanCM('jet'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 title('DO [\mumol/kg]');
 hold on; area(lon2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
 
-ax5=subplot(2,4,5);
+ax5=nexttile;
 pcolor(lon2017(b),pres2017(:,b),temp2017(:,b)); shading flat
 c=colorbar; caxis([2 10]); colormap(ax5,slanCM('turbo'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 ylabel('Pressure [dbar]'); xlabel('Longitude °W')
 hold on; area(lon2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
-ax6=subplot(2,4,6);
+ax6=nexttile;
 pcolor(lon2017(b),pres2017(:,b),sal2017(:,b)); shading flat
 c=colorbar; caxis([34.6 35.2]); colormap(ax6,slanCM('haline'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 xlabel('Longitude °W')
 hold on; area(lon2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
-ax7=subplot(2,4,7);
+ax7=nexttile;
 pcolor(lon2017(b),pres2017(:,b),dens2017(:,b)); shading flat
 c=colorbar; caxis([27.4 28]); colormap(ax7,slanCM('gnuplot2'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 xlabel('Longitude °W')
 hold on; area(lon2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
-ax8=subplot(2,4,8);
+ax8=nexttile;
 pcolor(lon2017(b),pres2017(:,b),oxy2017(:,b)); shading flat
 c=colorbar; caxis([240 300]); colormap(ax8,slanCM('jet'));
-set(gca,'YDir','reverse'); ylim([100 3500])
+set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 xlabel('Longitude °W')
 hold on; area(lon2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off 
 
-sgtitle('West-Ridge Transect','FontSize',17, 'FontWeight', 'bold','FontName','LMRoman10')
+sgtitle('Cross-Ridge Transect 3 (North)','FontSize',17, 'FontWeight', 'bold','FontName','LMRoman10')
 
-% saveas(gcf,'4.Hydrography_westridge.png')
+imgname=imgnametrans{q}; % Name of the image being stored
+figname=fullfile(figpath, imgname);
+% Save the figure
+set(gca, 'LooseInset', get(gca, 'TightInset'));
+print(gcf,figname, '-dpng', '-r0', '-loose')
 
 %% Ploting transects: Transect 5 (north-east of ridge)
 
@@ -588,6 +623,8 @@ ISOW2015=dens2015>27.8 & sal2015>34.94;
 ISOW2017=dens2017>27.8 & sal2017>34.94;
 
 %% We calculate the averages in each water mass range in order to get the source water mass
+
+SA2015=s2015; SA2017=s2017; CT2015=temp2015; CT2017=temp2017;
 
 SA_NACW_2015=mean(SA2015(NACW2015),"all",'omitmissing'); SA_NACW_2017=mean(SA2017(NACW2017),"all",'omitmissing');
 CT_NACW_2015=mean(CT2015(NACW2015),"all",'omitmissing'); CT_NACW_2017=mean(CT2017(NACW2017),"all",'omitmissing');

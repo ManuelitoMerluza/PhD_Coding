@@ -8,9 +8,9 @@ function [T_sum2015, T_sum2017, X_sum2015, X_sum2017, T_mag2015, T_mag2017] = RR
 % Inputs
 % 
 % transect:      'ride' 'south' 'ovide' 'north'
-% WM:            'NACW', 'SAW', 'SPMW', 'SAIW', 'ISW', 'LSW', 'LSW', 'ISOW', 'LDW'
+% WM:            'NACW', 'SPMW', 'IW', 'SAIW', 'LSW', 'ISOW', 'LDW'
 %
-% method:        'mean', any other string :p 
+% method:        'mean', 'total'
 %                 This option is for the method used for
 %                 making the product between the transport and the water
 %                 mass percentage. If you choose 'mean' it will take the
@@ -18,7 +18,7 @@ function [T_sum2015, T_sum2017, X_sum2015, X_sum2017, T_mag2015, T_mag2017] = RR
 %                 multiply it to the total transport in that location. The
 %                 other option is making a product between each water mass
 %                 percentage and transport, after which the result in
-%                 summed verticale to end up with the total transport.
+%                 summed verticaly to end up with the total transport.
 
 % Outputs
 %
@@ -43,8 +43,7 @@ addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_coding'))
 % Paths where Absolute Velocity Data is stored
 path2015='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_geo/';
 path2017='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/transport_geo/';
-%Ekpath2017='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/transport_Ekman/';
-%Ekpath2015='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/transport_Ekman/';
+
 
 %% Defines the stations for each transect (Original CTD locations)
 
@@ -66,12 +65,12 @@ transects2017=dynamicvariable(transect,'_2017');
 
 %% Loads and Defines water mass
 
-WMN = {'NACW', 'SAW', 'SPMW', 'SAIW', 'ISW', 'LSW', 'ISOW', 'LDW'};
+WMN = {'NACW', 'SPMW', 'IW', 'SAIW', 'LSW', 'ISOW', 'LDW'};
 match = strcmp(WM, WMN);
 WMi = find(match); % This is the position of the water mass in matrix
 
 % 2015
-load('RREX2015_Water_Mass_fractions_6poly.mat','X2015')
+load('RREX2015_Water_Mass_fractions_5poly.mat','X2015')
 X=permute(X2015,[2 1 3]); % Changes dimensions for consistency
 X=X(:,transects2015,:); % Subsamples the transect
 % This is for the case we take the average
@@ -85,7 +84,7 @@ WMP2015=squeeze(WMP2015(:,:,WMi)); % Changes NaN for 0 and selects the water mas
 %WMP2015(isnan(WMP2015))=0;
 
 % 2017
-load('RREX2017_Water_Mass_fractions_6poly.mat','X2017')
+load('RREX2017_Water_Mass_fractions_5poly.mat','X2017')
 X=permute(X2017,[2 1 3]);
 X=X(:,transects2017,:);
 % This is for the case we take the average

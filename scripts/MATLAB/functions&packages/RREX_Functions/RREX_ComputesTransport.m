@@ -117,6 +117,8 @@ elseif strcmp(transect,'north')
 end
 tr_z2017=tr_z; X2017=X; X_ctd2017=X_ctd; 
 
+% % THIS LINE IS USED FOR CHECKING THE TRANSPORT BELOW 100 DBAR
+% tr_z2017(1:101,:)=0; tr_z2015(1:101,:)=0;
 
 if strcmp(layer,'tot')
     % 2015
@@ -139,7 +141,7 @@ else
             T_tot2017(i) = sum(tr2017);
         end
      % Adds the ekman transport if its the upper layer
-     if strcmp(layer,'layer1')
+     if strcmp(layer,'layer1') % If I'm checking below 100dbar this need to be commented
          T_tot2015=T_tot2015+(Ekride2015.tr_ek)';
          T_tot2017=T_tot2017+(Ekride2017.tr_ek)';
      end

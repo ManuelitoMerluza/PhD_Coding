@@ -144,7 +144,7 @@ for qq=1:4 % Counter for layers
         [~, ~, ~, ~, T_mag2015(qq,:), T_mag2017(qq,:)] = RREX_ComputesTransport(transect{q},layers{qq});
 end
 
-sum(T_mag2017,1)
+sum(T_mag2015,1)
 
 %% Plots the density with bathymetry
 
@@ -273,81 +273,81 @@ figname=fullfile(figpath, imgname{2});
 
 %% We plot again, but adding both cruises to the same figure
 
-color=[0.5 0 0.8];
-
-figure()
-set(gcf, 'Position', [185, 0, 1200, 950]);
-% 2015
-    depth=gsw_z_from_p(pres2015,lat2015);
-    p=-depth(:,sta2015)/1000;
-    dens=dens2015(:,sta2015);
-    X=repmat(lat2015(sta2015)',4449,1);
-hold on
-contour(X,p,dens,surfaces,'b')
-% 2017
-    depth=gsw_z_from_p(pres2017,lat2017);
-    p=-depth(:,sta2017)/1000;
-    dens=dens2017(:,sta2017);
-    X=repmat(lat2017(sta2017)',4340,1);
-contour(X,p,dens,surfaces,'--r')
-
-
-fill([65 64 X_bathy2017],[0 0 bathy_ship2017],[0.5 0.5 0.5]);
-xline(63.417,'--'); xline(58.9,'--') ; xline(56.7,'--') ; xline(53.35,'--') ; xline(49.15,'--');
-ylim([0 4.5])
-set(gca,'ydir','reverse')
-ylabel('Depth (km)')
-xlim(xlimm); xlabel(xlab);
-title('RREX - Transport by Layers in Ridge Section','FontName','LMRoman10','FontSize',15,'FontWeight','bold')
-grid on
-
-
-% We add the transport calculated by sections
-% Layer 1 2015
-annotation('textbox',[.23 .72 .15 .2], 'String',[num2str(T_mag2015(1,1)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.44 .73 .15 .2], 'String',[num2str(T_mag2015(1,2)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.56 .73 .15 .2], 'String',[num2str(T_mag2015(1,3)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.73 .73 .15 .2], 'String',[num2str(T_mag2015(1,4)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
-% Layer 1 2017
-annotation('textbox',[.21 .69 .15 .2], 'String',[num2str(T_mag2017(1,1)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.48 .705 .15 .2], 'String',[num2str(T_mag2017(1,2)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.58 .70 .15 .2], 'String',[num2str(T_mag2017(1,3)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.735 .695 .15 .2], 'String',[num2str(T_mag2017(1,4)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
-
-% Layer 2 2015
-annotation('textbox',[.33 .67 .15 .2], 'String',[num2str(T_mag2015(2,1)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.45 .66 .15 .2], 'String',[num2str(T_mag2015(2,2)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.585 .605 .15 .2], 'String',[num2str(T_mag2015(2,3)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.68 .66 .15 .2], 'String',[num2str(T_mag2015(2,4)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
-% Layer 2 2017
-annotation('textbox',[.24 .615 .15 .2], 'String',[num2str(T_mag2017(2,1)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.41 .665 .15 .2], 'String',[num2str(T_mag2017(2,2)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.55 .63 .15 .2], 'String',[num2str(T_mag2017(2,3)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.66 .61 .15 .2], 'String',[num2str(T_mag2017(2,4)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
-
-% Layer 3 2015
-annotation('textbox',[.31 .54 .15 .2], 'String',[num2str(T_mag2015(3,1)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.49 .54 .15 .2], 'String',[num2str(T_mag2015(3,2)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.61 .55 .15 .2], 'String',[num2str(T_mag2015(3,3)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.655 .565 .15 .2], 'String',[num2str(T_mag2015(3,4)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
-% Layer 3 2017
-annotation('textbox',[.24 .48 .15 .2], 'String',[num2str(T_mag2017(3,1)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.395 .57 .15 .2], 'String',[num2str(T_mag2017(3,2)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.59 .68 .06 .03], 'String',[num2str(T_mag2017(3,3)) ' Sv'],'EdgeColor','r','Color','r','FontSize',11,'FontWeight','bold','BackgroundColor','w','HorizontalAlignment','center','VerticalAlignment','middle')
-annotation('textbox',[.665 .69 .06 .03], 'String',[num2str(T_mag2017(3,4)) ' Sv'],'EdgeColor','r','Color','r','FontSize',11,'FontWeight','bold','BackgroundColor','w','HorizontalAlignment','center','VerticalAlignment','middle')
-
-% Layer 4 2015
-annotation('textbox',[.29 .30 .15 .2], 'String',[num2str(T_mag2015(4,1)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.44 .56 .06 .03], 'String',[num2str(T_mag2015(4,2)) ' Sv'],'EdgeColor','b','Color','b','FontSize',11,'FontWeight','bold','BackgroundColor','w','HorizontalAlignment','center','VerticalAlignment','middle')
-annotation('textbox',[.56 .58 .06 .03], 'String',[num2str(T_mag2015(4,3)) ' Sv'],'EdgeColor','b','Color','b','FontSize',11,'FontWeight','bold','BackgroundColor','w','HorizontalAlignment','center','VerticalAlignment','middle')
-% Layer 4 2017
-annotation('textbox',[.24 .25 .15 .2], 'String',[num2str(T_mag2017(4,1)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
-annotation('textbox',[.405 .51 .06 .03], 'String',[num2str(T_mag2017(4,2)) ' Sv'],'EdgeColor','r','Color','r','FontSize',11,'FontWeight','bold','BackgroundColor','w','HorizontalAlignment','center','VerticalAlignment','middle')
-annotation('textbox',[.56 .53 .06 .03], 'String',[num2str(T_mag2017(4,3)) ' Sv'],'EdgeColor','r','Color','r','FontSize',11,'FontWeight','bold','BackgroundColor','w','HorizontalAlignment','center','VerticalAlignment','middle')
-
-hold off
-
-figname=fullfile(figpath, imgname{3});
-
-%set(gca, 'LooseInset', get(gca, 'TightInset'));
-% print(gcf,figname, '-dpng', '-r0', '-loose')
+% color=[0.5 0 0.8];
+% 
+% figure()
+% set(gcf, 'Position', [185, 0, 1200, 950]);
+% % 2015
+%     depth=gsw_z_from_p(pres2015,lat2015);
+%     p=-depth(:,sta2015)/1000;
+%     dens=dens2015(:,sta2015);
+%     X=repmat(lat2015(sta2015)',4449,1);
+% hold on
+% contour(X,p,dens,surfaces,'b')
+% % 2017
+%     depth=gsw_z_from_p(pres2017,lat2017);
+%     p=-depth(:,sta2017)/1000;
+%     dens=dens2017(:,sta2017);
+%     X=repmat(lat2017(sta2017)',4340,1);
+% contour(X,p,dens,surfaces,'--r')
+% 
+% 
+% fill([65 64 X_bathy2017],[0 0 bathy_ship2017],[0.5 0.5 0.5]);
+% xline(63.417,'--'); xline(58.9,'--') ; xline(56.7,'--') ; xline(53.35,'--') ; xline(49.15,'--');
+% ylim([0 4.5])
+% set(gca,'ydir','reverse')
+% ylabel('Depth (km)')
+% xlim(xlimm); xlabel(xlab);
+% title('RREX - Transport by Layers in Ridge Section','FontName','LMRoman10','FontSize',15,'FontWeight','bold')
+% grid on
+% 
+% 
+% % We add the transport calculated by sections
+% % Layer 1 2015
+% annotation('textbox',[.23 .72 .15 .2], 'String',[num2str(T_mag2015(1,1)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.44 .73 .15 .2], 'String',[num2str(T_mag2015(1,2)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.56 .73 .15 .2], 'String',[num2str(T_mag2015(1,3)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.73 .73 .15 .2], 'String',[num2str(T_mag2015(1,4)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
+% % Layer 1 2017
+% annotation('textbox',[.21 .69 .15 .2], 'String',[num2str(T_mag2017(1,1)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.48 .705 .15 .2], 'String',[num2str(T_mag2017(1,2)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.58 .70 .15 .2], 'String',[num2str(T_mag2017(1,3)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.735 .695 .15 .2], 'String',[num2str(T_mag2017(1,4)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
+% 
+% % Layer 2 2015
+% annotation('textbox',[.33 .67 .15 .2], 'String',[num2str(T_mag2015(2,1)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.45 .66 .15 .2], 'String',[num2str(T_mag2015(2,2)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.585 .605 .15 .2], 'String',[num2str(T_mag2015(2,3)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.68 .66 .15 .2], 'String',[num2str(T_mag2015(2,4)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
+% % Layer 2 2017
+% annotation('textbox',[.24 .615 .15 .2], 'String',[num2str(T_mag2017(2,1)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.41 .665 .15 .2], 'String',[num2str(T_mag2017(2,2)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.55 .63 .15 .2], 'String',[num2str(T_mag2017(2,3)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.66 .61 .15 .2], 'String',[num2str(T_mag2017(2,4)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
+% 
+% % Layer 3 2015
+% annotation('textbox',[.31 .54 .15 .2], 'String',[num2str(T_mag2015(3,1)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.49 .54 .15 .2], 'String',[num2str(T_mag2015(3,2)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.61 .55 .15 .2], 'String',[num2str(T_mag2015(3,3)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.655 .565 .15 .2], 'String',[num2str(T_mag2015(3,4)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
+% % Layer 3 2017
+% annotation('textbox',[.24 .48 .15 .2], 'String',[num2str(T_mag2017(3,1)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.395 .57 .15 .2], 'String',[num2str(T_mag2017(3,2)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.59 .68 .06 .03], 'String',[num2str(T_mag2017(3,3)) ' Sv'],'EdgeColor','r','Color','r','FontSize',11,'FontWeight','bold','BackgroundColor','w','HorizontalAlignment','center','VerticalAlignment','middle')
+% annotation('textbox',[.665 .69 .06 .03], 'String',[num2str(T_mag2017(3,4)) ' Sv'],'EdgeColor','r','Color','r','FontSize',11,'FontWeight','bold','BackgroundColor','w','HorizontalAlignment','center','VerticalAlignment','middle')
+% 
+% % Layer 4 2015
+% annotation('textbox',[.29 .30 .15 .2], 'String',[num2str(T_mag2015(4,1)) ' Sv'],'EdgeColor','none','Color','b','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.44 .56 .06 .03], 'String',[num2str(T_mag2015(4,2)) ' Sv'],'EdgeColor','b','Color','b','FontSize',11,'FontWeight','bold','BackgroundColor','w','HorizontalAlignment','center','VerticalAlignment','middle')
+% annotation('textbox',[.56 .58 .06 .03], 'String',[num2str(T_mag2015(4,3)) ' Sv'],'EdgeColor','b','Color','b','FontSize',11,'FontWeight','bold','BackgroundColor','w','HorizontalAlignment','center','VerticalAlignment','middle')
+% % Layer 4 2017
+% annotation('textbox',[.24 .25 .15 .2], 'String',[num2str(T_mag2017(4,1)) ' Sv'],'EdgeColor','none','Color','r','FontSize',11,'FontWeight','bold')
+% annotation('textbox',[.405 .51 .06 .03], 'String',[num2str(T_mag2017(4,2)) ' Sv'],'EdgeColor','r','Color','r','FontSize',11,'FontWeight','bold','BackgroundColor','w','HorizontalAlignment','center','VerticalAlignment','middle')
+% annotation('textbox',[.56 .53 .06 .03], 'String',[num2str(T_mag2017(4,3)) ' Sv'],'EdgeColor','r','Color','r','FontSize',11,'FontWeight','bold','BackgroundColor','w','HorizontalAlignment','center','VerticalAlignment','middle')
+% 
+% hold off
+% 
+% figname=fullfile(figpath, imgname{3});
+% 
+% %set(gca, 'LooseInset', get(gca, 'TightInset'));
+% % print(gcf,figname, '-dpng', '-r0', '-loose')
