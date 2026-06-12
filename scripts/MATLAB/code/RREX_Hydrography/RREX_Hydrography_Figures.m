@@ -23,8 +23,6 @@ temp2015=ncread(filenames(1).name,'TEMP'); % In situ temperature
 sal2015=ncread(filenames(1).name,'PSAL'); % Practical Salinity
 oxy2015=ncread(filenames(1).name,'OXYK'); % Oxygen concentration in umol/kg
 dens2015=ncread(filenames(1).name,'SIG0'); % Density anomaly referred to p=0
-N2015=ncread(filenames(1).name,'BRV2'); % Brunt Vaisala frequency squared
-f2015=ncread(filenames(1).name,'VORP'); % Planetary Vorticity
 n2015=length(lat2015);
 
 lat2017=ncread(filenames(2).name,'LATITUDE',2,inf);
@@ -35,8 +33,6 @@ temp2017=ncread(filenames(2).name,'TEMP',[1 2],[inf inf]); % In situ temperature
 sal2017=ncread(filenames(2).name,'PSAL',[1 2],[inf inf]); % Practical Salinity
 oxy2017=ncread(filenames(2).name,'OXYK',[1 2],[inf inf]); % Oxygen concentration in umol/kg
 dens2017=ncread(filenames(2).name,'SIG0',[1 2],[inf inf]); % Density anomaly referred to p=0
-N2017=ncread(filenames(2).name,'BRV2',[1 2],[inf inf]); % Brunt Vaisala frequency squared
-f2017=ncread(filenames(2).name,'VORP',[1 2],[inf inf]); % Planetary Vorticity
 n2017=length(lat2017);
 
 %% Calculates potential temperature and absolute salinity
@@ -56,6 +52,81 @@ gamma2017 = eos80_legacy_gamma_n(sal2017,temp2017,pres2017,loni2017,lati2017);
 temp2015 = gsw_pt_from_t(SA2015,temp2015,pres2015);
 temp2017 = gsw_pt_from_t(SA2017,temp2017,pres2017);
 
+%% Calculates N2, the thermal and haline components of stratification
+
+% I used 3 different methods for calculating the thermal and haline
+% components.
+% 1) I used a modifed version of the gsw_Nsquared function
+%    called N2T and N2S.
+% 2) I computed the terms manually using:
+%    a) Finite diference method for derivatives
+%    b) Gradient function for derivatives
+% There are no major diferences between the methods, so I finally decided
+% to plot the values calculated using gsw's framework
+
+% 2015
+[N2_2015, pmid2015]=gsw_Nsquared(SA2015,CT2015,pres2015,repmat(lat2015',4449,1)); % N2
+[N2T_2015, ~]=N2T(SA2015,CT2015,pres2015,repmat(lat2015',4449,1)); % N2 Thermal Component
+[N2S_2015, ~]=N2S(SA2015,CT2015,pres2015,repmat(lat2015',4449,1)); % N2 Haline Component
+
+% 2017
+[N2_2017, pmid2017]=gsw_Nsquared(SA2017,CT2017,pres2017,repmat(lat2017',4340,1));
+[N2T_2017, ~]=N2T(SA2017,CT2017,pres2017,repmat(lat2017',4340,1)); % N2 Thermal Component
+[N2S_2017, ~]=N2S(SA2017,CT2017,pres2017,repmat(lat2017',4340,1)); % N2 Haline Component
+
+alpha2015=gsw_alpha(SA2015,CT2015,pres2015); % Thermal expansion
+alpha2017=gsw_alpha(SA2017,CT2017,pres2017);
+alpha2015diff=0.5*(alpha2015(1:end-1,:)+alpha2015(2:end,:)); % Same size as N2
+alpha2017diff=0.5*(alpha2017(1:end-1,:)+alpha2017(2:end,:));
+
+beta2015=gsw_beta(SA2015,CT2015,pres2015); % Haline contraction
+beta2017=gsw_beta(SA2017,CT2017,pres2017);
+beta2015diff=0.5*(beta2015(1:end-1,:)+beta2015(2:end,:)); % Same size as N2
+beta2017diff=0.5*(beta2017(1:end-1,:)+beta2017(2:end,:)); 
+
+z2015=gsw_z_from_p(pres2015,lat2015);
+z2017=gsw_z_from_p(pres2017,lat2017);
+
+
+% Prepares the variables used for calculation
+g = 9.7963; % g aceleration ussed in gsw_Nsquated function
+% You can choose between the difference of gradient method for derivation
+Tz2015diff=NaN(size(pres2015)-1); Sz2015diff=NaN(size(pres2015)-1);
+Dz2015diff=NaN(size(pres2015)-1);
+Tz2015=NaN(size(pres2015)); Sz2015=NaN(size(pres2015)); Dz2015=NaN(size(pres2015));
+for i=1:length(lat2015)
+    Tz2015diff(:,i)=diff(CT2015(:,i))./diff(z2015(:,i)); % Vertical Temperature Gradient
+    Sz2015diff(:,i)=diff(SA2015(:,i))./diff(z2015(:,i)); % Vertical Salinity Gradient
+    Dz2015diff(:,i)=diff(dens2015(:,i))./diff(z2015(:,i)); % Density Gradient
+    Tz2015(:,i)=gradient(CT2015(:,i),z2015(:,i)); 
+    Sz2015(:,i)=gradient(SA2015(:,i),z2015(:,i)); 
+    Dz2015(:,i)=gradient(dens2015(:,i),z2015(:,i)); 
+end
+
+Tz2017diff=NaN(size(pres2017)-1); Sz2017diff=NaN(size(pres2017)-1);
+Dz2017diff=NaN(size(pres2017)-1);
+Tz2017=NaN(size(pres2017)); Sz2017=NaN(size(pres2017)); Dz2017=NaN(size(pres2017));
+for i=1:length(lat2017)
+    Tz2017diff(:,i)=diff(CT2017(:,i))./diff(z2017(:,i)); % Vertical Temperature Gradient
+    Sz2017diff(:,i)=diff(SA2017(:,i))./diff(z2017(:,i)); % Vertical Salinity Gradient
+    Dz2017diff(:,i)=diff(dens2017(:,i))./diff(z2017(:,i)); % Vertical Salinity Gradient
+    Tz2017(:,i)=gradient(CT2017(:,i),z2017(:,i));
+    Sz2017(:,i)=gradient(SA2017(:,i),z2017(:,i));
+    Dz2017(:,i)=gradient(dens2017(:,i),z2017(:,i));
+end
+
+
+% Computes the T and S components of N2
+% Difference
+thermal2015diff=g*(alpha2015diff.*Tz2015diff); thermal2017diff=g*(alpha2017diff.*Tz2017diff);
+haline2015diff=-g*(beta2015diff.*Sz2015diff); haline2017diff=-g*(beta2017diff.*Sz2017diff);
+% N22015diff=(g/1025)*Dz2015diff; N22017diff=(g/1025)*Dz2017diff; 
+N22015diff=thermal2015diff+haline2015diff; N22017diff=thermal2017diff+haline2017diff;
+% Gradient
+thermal2015=g*(alpha2015.*Tz2015); thermal2017=g*(alpha2017.*Tz2017);
+haline2015=g*(beta2015.*Sz2015); haline2017=g*(beta2017.*Sz2017);
+%N22015=(g/1025)*Dz2015; N22017=(g/1025)*Dz2017; 
+N22015=thermal2015+haline2015; N22017=thermal2017+haline2017;
 
 %% First, we take a look at the amount of data to see how we can separate it in transects
 % 
@@ -173,7 +244,6 @@ imgnametrans={'01.RREX_Transect_ridge.png','02.RREX_Transect_south.png','03.RREX
 q=1; 
 a=transects2015{q}; b=transects2017{q};
 
-
 figure(); set(gcf, 'Position',  [100, 100, 1700, 700])
 t=tiledlayout(2,4,"TileSpacing","compact","Padding","compact");
 
@@ -193,7 +263,6 @@ set(gca,'YDir','reverse'); ylim(ylims(q,:)); xlim(xlims(q,:));
 %c.Label.String = '[PSU]';
 title('Salinity [PSU]');
 hold on; h=area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6],'edgecolor','k'); hold off
-
 
 ax3=nexttile;
 pcolor(lat2015(a),pres2015(:,a),dens2015(:,a)); shading flat
@@ -241,6 +310,158 @@ hold on; area(lat2017(b),bottom2017(b),5000,'facecolor',[0.6 0.6 0.6],'edgecolor
 sgtitle('Along-Ridge Transect','FontSize',17, 'FontWeight', 'bold','FontName','LMRoman10')
 
 imgname=imgnametrans{q}; % Name of the image being stored
+figname=fullfile(figpath, imgname);
+% Save the figure
+set(gca, 'LooseInset', get(gca, 'TightInset'));
+% print(gcf,figname, '-dpng', '-r0', '-loose')
+
+%% PLotting N2 gsw
+
+q=1; 
+a=transects2015{q}; b=transects2017{q};
+
+figure(); set(gcf, 'Position',  [100, 100, 1300, 700])
+tiledlayout(2,3,"TileSpacing","compact","Padding","compact");
+
+nexttile;
+pcolor(lat2015(a),pmid2015(:,a),N2_2015(:,a)); shading interp
+set(gca,'colorscale','log'); clim([1e-8 1e-4]);
+set(gca,'YDir','reverse'); ylim([100 1000]); xlim(xlims(q,:));
+ylabel('Pressure [dbar]'); title('N^2 [1/s^2]');
+hold on; h=area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6], ...
+    'edgecolor','k');
+hold off
+
+nexttile;
+pcolor(lat2015(a),pmid2015(:,a),N2T_2015(:,a)); shading interp
+set(gca,'colorscale','log'); clim([1e-8 1e-4]);
+set(gca,'YDir','reverse'); ylim([100 1000]); xlim(xlims(q,:));
+title('N^2_T [1/s^2]');
+hold on; h=area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6], ...
+    'edgecolor','k');
+hold off
+
+nexttile;
+pcolor(lat2015(a),pmid2015(:,a),N2S_2015(:,a)); shading interp
+colorbar; 
+set(gca,'colorscale','log'); clim([1e-8 1e-4]);
+set(gca,'YDir','reverse'); ylim([100 1000]); xlim(xlims(q,:));
+title('N^2_S [1/s^2]');
+hold on; h=area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6], ...
+    'edgecolor','k');
+hold off
+
+
+nexttile;
+pcolor(lat2017(b),pmid2017(:,b),N2_2017(:,b)); shading interp
+set(gca,'colorscale','log'); clim([1e-8 1e-4]);
+set(gca,'YDir','reverse'); ylim([100 1000]); xlim(xlims(q,:));
+ylabel('Pressure [dbar]'); xlabel('Longitude °W')
+hold on; h=area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6], ...
+    'edgecolor','k');
+hold off
+
+nexttile;
+pcolor(lat2017(b),pmid2017(:,b),N2T_2017(:,b)); shading interp
+set(gca,'colorscale','log'); clim([1e-8 1e-4]);
+set(gca,'YDir','reverse'); ylim([100 1000]); xlim(xlims(q,:));
+xlabel('Longitude °W')
+hold on; h=area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6], ...
+    'edgecolor','k');
+hold off
+
+nexttile;
+pcolor(lat2017(b),pmid2017(:,b),N2S_2017(:,b)); shading interp
+colormap(slanCM('viridis')); colorbar; 
+set(gca,'colorscale','log'); clim([1e-8 1e-4]);
+set(gca,'YDir','reverse'); ylim([100 1000]); xlim(xlims(q,:));
+xlabel('Longitude °W')
+hold on; h=area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6], ...
+    'edgecolor','k');
+hold off
+
+sgtitle('Along-Ridge Transect - GSW','FontSize',17, 'FontWeight', 'bold','FontName','LMRoman10')
+
+imgname='0.N2_gsw_RidgeTransect.png'; % Name of the image being stored
+figname=fullfile(figpath, imgname);
+% Save the figure
+set(gca, 'LooseInset', get(gca, 'TightInset'));
+% print(gcf,figname, '-dpng', '-r0', '-loose')
+
+%% PLotting N2 Diff
+
+q=1; 
+a=transects2015{q}; b=transects2017{q};
+
+figure(); set(gcf, 'Position',  [100, 100, 1300, 700])
+tiledlayout(2,3,"TileSpacing","compact","Padding","compact");
+
+nexttile;
+pcolor(lat2015(a),pmid2015(:,a),N22015diff(:,a)); shading interp
+% pcolor(lat2015(a),pres2015(:,a),N22015(:,a)); shading interp
+set(gca,'colorscale','log'); clim([1e-8 1e-4]);
+set(gca,'YDir','reverse'); ylim([100 1000]); xlim(xlims(q,:));
+ylabel('Pressure [dbar]'); title('N^2 [1/s^2]');
+hold on; h=area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6], ...
+    'edgecolor','k');
+hold off
+
+nexttile;
+pcolor(lat2015(a),pmid2015(:,a),thermal2015diff(:,a)); shading interp
+% pcolor(lat2015(a),pres2015(:,a),thermal2015(:,a)); shading interp
+set(gca,'colorscale','log'); clim([1e-8 1e-4]);
+set(gca,'YDir','reverse'); ylim([100 1000]); xlim(xlims(q,:));
+title('N^2_T [1/s^2]');
+hold on; h=area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6], ...
+    'edgecolor','k');
+hold off
+
+nexttile;
+pcolor(lat2015(a),pmid2015(:,a),haline2015diff(:,a)); shading interp
+% pcolor(lat2015(a),pres2015(:,a),haline2015(:,a)); shading interp
+colorbar; 
+set(gca,'colorscale','log'); clim([1e-8 1e-4]);
+set(gca,'YDir','reverse'); ylim([100 1000]); xlim(xlims(q,:));
+title('N^2_S [1/s^2]');
+hold on; h=area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6], ...
+    'edgecolor','k');
+hold off
+
+nexttile;
+pcolor(lat2017(b),pmid2017(:,b),N22017diff(:,b)); shading interp
+% pcolor(lat2017(b),pres2017(:,b),N22017(:,b)); shading interp
+set(gca,'colorscale','log'); clim([1e-8 1e-4]);
+set(gca,'YDir','reverse'); ylim([100 1000]); xlim(xlims(q,:));
+ylabel('Pressure [dbar]'); xlabel('Longitude °W')
+hold on; h=area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6], ...
+    'edgecolor','k');
+hold off
+
+nexttile;
+pcolor(lat2017(b),pmid2017(:,b),thermal2017diff(:,b)); shading interp
+% pcolor(lat2017(b),pres2017(:,b),thermal2017(:,b)); shading interp
+set(gca,'colorscale','log'); clim([1e-8 1e-4]);
+set(gca,'YDir','reverse'); ylim([100 1000]); xlim(xlims(q,:));
+xlabel('Longitude °W')
+hold on; h=area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6], ...
+    'edgecolor','k');
+hold off
+
+nexttile;
+pcolor(lat2017(b),pmid2017(:,b),haline2017diff(:,b)); shading interp
+% pcolor(lat2017(b),pres2017(:,b),haline2017(:,b)); shading interp
+colormap(slanCM('viridis')); colorbar; 
+set(gca,'colorscale','log'); clim([1e-8 1e-4]);
+set(gca,'YDir','reverse'); ylim([100 1000]); xlim(xlims(q,:));
+xlabel('Longitude °W')
+hold on; h=area(lat2015(a),bottom2015(a),5000,'facecolor',[0.6 0.6 0.6], ...
+    'edgecolor','k');
+hold off
+
+
+sgtitle('Along-Ridge Transect - Diff','FontSize',17, 'FontWeight', 'bold','FontName','LMRoman10')
+
+imgname='0.N2_diff_RidgeTransect.png'; % Name of the image being stored
 figname=fullfile(figpath, imgname);
 % Save the figure
 set(gca, 'LooseInset', get(gca, 'TightInset'));

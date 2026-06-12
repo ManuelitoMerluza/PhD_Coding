@@ -86,6 +86,7 @@ mlp = nan(ns,1);
 
 rho0 = gsw_rho(SA,CT,zeros(size(SA)));
 
+index = 0.03;  % Adjust the density threshold
 %--------------------------------------------------------------------------
 % This function calculates density using the computationally-efficient 
 % 75-term expression for specific volume in terms of SA, CT and p.  If one
@@ -115,7 +116,8 @@ for Iprofile = 1:ns
         elseif min(p_tmp) > 20  % the profile starts at pressure greater than 20 dbar
             mlp(Iprofile) = NaN;
         else
-            diff_rho0 = (min_rho0 + 0.3) - rho0_tmp;
+            diff_rho0 = (min_rho0 + index) - rho0_tmp; % ORIGINAL
+            % diff_rho0 = (min_rho0 + 0.2) - rho0_tmp; % MODIFIED
             I3 = find(diff_rho0 > 0);
             mlp(Iprofile) = p_tmp(I3(end));
         end
@@ -129,26 +131,27 @@ for Iprofile = 1:ns
         % closest to 5 dbar.
         if dmlp < 20
             
-            SA_tmp = SA(Inn(I1(I2)),Iprofile);
-            CT_tmp = CT(Inn(I1(I2)),Iprofile);
-            
-            [dummy, I4] = min(abs(p_tmp - 5));
-            SA_tmp(1:I4-1) = SA_tmp(I4);
-            CT_tmp(1:I4-1) = CT_tmp(I4);
-            
-            rho0_tmp(1:I4-1) = gsw_rho(SA_tmp(1:I4-1),CT_tmp(1:I4-1),0);
-            
-            min_rho0_tmp = min(rho0_tmp);
-            
-            diff_rho0_tmp = (min_rho0_tmp + 0.3) - rho0_tmp;
-            
-            I3 = find(diff_rho0_tmp > 0);
-            mlp(Iprofile) = p_tmp(I3(end));        
-            dmlp = mlp(Iprofile) - min(p_tmp);
-            
-            if dmlp < 20
-                mlp(Iprofile) = NaN;
-            end
+            % SA_tmp = SA(Inn(I1(I2)),Iprofile);
+            % CT_tmp = CT(Inn(I1(I2)),Iprofile);
+            % 
+            % [dummy, I4] = min(abs(p_tmp - 5));
+            % SA_tmp(1:I4-1) = SA_tmp(I4);
+            % CT_tmp(1:I4-1) = CT_tmp(I4);
+            % 
+            % rho0_tmp(1:I4-1) = gsw_rho(SA_tmp(1:I4-1),CT_tmp(1:I4-1),0);
+            % 
+            % min_rho0_tmp = min(rho0_tmp);
+            % 
+            % diff_rho0_tmp = (min_rho0_tmp + index) - rho0_tmp; % ORIGINAL
+            % % diff_rho0_tmp = (min_rho0_tmp + 0.2) - rho0_tmp; % MODIFIED
+            % 
+            % I3 = find(diff_rho0_tmp > 0);
+            % mlp(Iprofile) = p_tmp(I3(end));        
+            % dmlp = mlp(Iprofile) - min(p_tmp);
+            % 
+            % if dmlp < 20
+            %     mlp(Iprofile) = NaN;
+            % end
             
         end
     else

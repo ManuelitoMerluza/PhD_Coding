@@ -1,8 +1,7 @@
 % This is the script for plotting both the hydrography and microstructure EMAPEX data
 
 % We load paths and colorbars
-addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/Year 1 - 2026'))
-%addpath(genpath('D:/Respaldo PC/iop/materia/Magister/Semestre 2/PRODIGY/m_map/'))
+addpath(genpath('C:/Users/mitg1n25/Desktop/PhD/PhD_coding'))
 set(0, 'DefaultAxesFontSize', 12);
 set(0, 'DefaultAxesTitleFontSizeMultiplier', 1.15)
 
@@ -94,6 +93,7 @@ tit = {'Temperature [C]'; 'Salinity [PSU]'; '\gamma_n [kg/m^3]'; '\chi_\theta [K
 lim=[2 15; 34.8 35.4; 27 28; 1e-10 1e-7; -15 15; -15 15];
 colorpallet={'turbo','haline','gnuplot2','plasma','bwr','bwr'};
 
+
 for i=4%:length(b) 
 
 figure(i) % One figure for every float
@@ -184,4 +184,4 @@ OUTPUT.pressure=P_in_7806(:,1:206);
 OUTPUT.depth=depth;
 OUTPUT.time=datevec(time_micro_7806(1:206));
 
-save('EMAPEX_DataForNotebook_7806.mat', '-struct' , 'OUTPUT')
+% save('EMAPEX_DataForNotebook_7806.mat', '-struct' , 'OUTPUT')

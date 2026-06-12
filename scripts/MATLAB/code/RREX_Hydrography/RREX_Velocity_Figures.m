@@ -15,9 +15,38 @@ vmap(29,:) = 0.97; % Changes the middle of the cbar so it can be less white
 path2015='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX15/vitesse_abs/';
 path2017='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17/vitesse_abs/';
 
+% Defines path for loading CTD variables
+folder='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Hydrography';
+filenames = dir(fullfile(folder,'*CTDO.nc')); % Check the variable position
+
+dens2015=ncread(filenames(1).name,'SIG0'); % Density anomaly referred to p=0
+dens2017=ncread(filenames(2).name,'SIG0'); dens2017=dens2017(:,2:end);
+
+lat2015=ncread(filenames(1).name,'LATITUDE');
+lon2015=ncread(filenames(1).name,'LONGITUDE');
+
+lat2017=ncread(filenames(2).name,'LATITUDE'); lat2017=lat2017(2:end);
+lon2017=ncread(filenames(2).name,'LONGITUDE'); lon2017=lon2017(2:end);
+
 % It is important to have access to:
 % 1) Absolute velocity (Vgeo corrected by SADCP data)
 % 2) Bathymetry
+
+%% Defines the stations for each transect
+
+ride_2015=[68:84 89:102 110:133];
+north_2015=46:67;
+ovide_2015=26:45;
+south_2015=[3:10 15 16 21:25];
+
+ride_2017=[56:69 76:125];
+south_2017=[1:8 11:17];
+ovide_2017=[18:20 22:24 27:28 43:-1:41 38:-1:31];
+north_2017=[44:55 57];
+
+transects2015={ride_2015, south_2015, ovide_2015, north_2015};
+transects2017={ride_2017, south_2017, ovide_2017, north_2017};
+
 
 %% Adjust colormap (So grey is centered at zero)
 % 
@@ -47,7 +76,7 @@ path2017='C:/Users/mitg1n25/Desktop/PhD/PhD_Coding/data/RREX/Ivane_output_RREX17
 
 %% Makes a loop for running this automatically for all transect
 
-for q=2%:4
+for q=1:4
 
 %% First lets define the transect and load the variables
 transect={'ride','south','ovide','north'};
@@ -58,12 +87,15 @@ cruise='RREX 2017 '; % From which cruise
 if strcmp(section,'ride') % Defines x axis depending on the transect
     load([path2017 'OS38_section_' section '_use.mat'])
     xaxis=lat_abs;
+    xaxis_ctd=lat2017(transects2017{q});
     xlab='Latitude (°N)';
 else
     load([path2017 'OS38_section_' section '_polyfit.mat'])
     xaxis=lon_abs;
+    xaxis_ctd=lon2017(transects2017{q});
     xlab='Longitude (°E)';
 end
+dens=dens2017(:,transects2017{q});
 
 figtitle={'Reykjanes Ridge Transect','South Cross-Ridge Transect','OVIDE Transect','North West-Ridge Transect'};
 figtitle=figtitle{q}; % Title for the figure
@@ -155,6 +187,7 @@ clear Y_bathy X_bathy bathy_ship ind_bad
 % Path for saving the figure
 figpath='C:\Users\mitg1n25\Desktop\PhD\PhD_Coding\docs\figures\Velocity_RREX';
 figname=fullfile(figpath, imgname);
+surfaces=[27.52, 27.71, 27.8];
 
 % 2017
 figure()
@@ -164,6 +197,8 @@ vcol=-0.2:0.02:0.2;
 hold on
 pcolor(xaxis,z_abs*1e-3,v_abs); shading interp;
 contour(xaxis,z_abs*1e-3,v_abs,[0, 0],'Linecolor',[0.35 0.35 0.35],'LineWidth',1.8);
+[c,h]=contour(xaxis_ctd, z_abs*1e-3, dens, surfaces, '--k','LineWidth',0.5,'EdgeAlpha',0.5);
+clabel(c, h,'FontSize', 8, 'FontWeight', 'bold','LabelSpacing', 400, 'Color', 'k');
 set(gca,'ydir','reverse')
 xlabel(xlab); ylabel('Depth (km)');
 colorbar; colormap(vmap);
@@ -183,11 +218,19 @@ cruise='RREX 2015 ';
 if strcmp(section,'ride')
     load([path2015 'OS38_section_' section '_use.mat'])
     xaxis=lat_abs;
+    xaxis_ctd=lat2015(transects2015{q});
     xlab='Latitude (°N)';
 else
     load([path2015 'OS38_section_' section '_polyfit.mat'])
     xaxis=lon_abs;
+    xaxis_ctd=lon2015(transects2015{q});
     xlab='Longitude (°E)';
+end
+dens=dens2015(:,transects2015{q});
+
+if strcmp(section,'ovide')
+    [xaxis_ctd, aux] = sort(xaxis_ctd);
+    dens=dens(:,aux);
 end
 
 ax1=subplot(2,1,1);
@@ -195,6 +238,8 @@ vcol=-0.2:0.02:0.2;
 hold on
 pcolor(xaxis,z_abs*1e-3,v_abs); shading interp;
 contour(xaxis,z_abs*1e-3,v_abs,[0, 0],'Linecolor',[0.35 0.35 0.35],'LineWidth',1.8);
+[c,h]=contour(xaxis_ctd, z_abs*1e-3, dens, surfaces, '--k','LineWidth',0.5,'EdgeAlpha',0.5);
+clabel(c, h,'FontSize', 8, 'FontWeight', 'bold','LabelSpacing', 400, 'Color', 'k');
 set(gca,'ydir','reverse')
 ylabel('Depth (km)');
 colorbar; colormap(vmap);
@@ -221,6 +266,6 @@ pos = get(ax2, 'Position');
 set(ax2, 'Position', pos);
 
 set(gca, 'LooseInset', get(gca, 'TightInset'));
-%print(gcf,figname, '-dpng', '-r0', '-loose')
+print(gcf,figname, '-dpng', '-r0', '-loose')
 
 end

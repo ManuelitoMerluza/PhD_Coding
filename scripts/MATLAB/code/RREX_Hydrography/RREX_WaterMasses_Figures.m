@@ -67,7 +67,7 @@ pres2017 = pres2017(:,2:end);
 
 %% Prepares variables for plotting
 
-q=4; % q=[1, 2, 3, 4]
+q=1; % q=[1, 2, 3, 4]
 
 a=transects2015{q}; b=transects2017{q};
 if q==1
@@ -86,123 +86,7 @@ figpath='C:\Users\mitg1n25\Desktop\PhD\PhD_Coding\docs\figures\WaterMasses_RREX'
 imgname2015={'01.WaterMassPercentage_ridge2015.png','02.WaterMassPercentage_south2015.png','03.WaterMassPercentage_ovide2015.png','04.WaterMassPercentage_north2015.png'};
 imgname2017={'01.WaterMassPercentage_ridge2017.png','02.WaterMassPercentage_south2017.png','03.WaterMassPercentage_ovide2017.png','04.WaterMassPercentage_north2017.png'};
 imgnameboth={'01.WaterMassPercentage_ridge.png','02.WaterMassPercentage_south.png','03.WaterMassPercentage_ovide.png','04.WaterMassPercentage_north.png'};
-
-%% 2015
-
-% % This vector is for que location of the subplots
-% sp=[1 2 3 4 5.5 6.5 7.5];
-% ax={};
-% fig=figure(); set(gcf, 'Position',  [100, 100, 1600, 800])
-% for i=1:M
-%     ax{i}=subplot(2,4,sp(i));
-%     pcolor(xdim2015,pres2015(:,a),X2015(:,a,i)); shading flat
-%     caxis([0 1]); colormap(ax{i},slanCM('viridis'));
-%     set(gca,'YDir','reverse'); ylim([100 4500])
-%     title(WT2015(i,:)); xlim(xlims(q,:));
-%     % hold on; area(xdim2015,bottom2015(a),5000,'facecolor',[0.7 0.7 0.7],'edgecolor','k'); hold off 
-%     box on
-%     if i==1 || i==5
-%         ylabel('Pressure [dbar]');
-%     elseif i==4 || i==7
-%         set(gca, 'YAxisLocation', 'right')
-%         ylabel('Pressure [dbar]','Rotation',-90);
-%     else
-%         set(gca, 'YTickLabel','');
-%     end
-%     if i>4
-%         xlabel(xdimlabel);
-%     end
-%     set(gca, 'TickDir', 'out');
-% end
-% sgtitle(['Water Masses RREX2015 - ' titles{q} ' Transect'])
-% 
-% shiftdown=0.06;
-% shiftleft=[0.0 0.04 0.08 0.12];
-% for i=1:4
-%     pos = get(ax{i}, 'Position');
-%     pos(2) = pos(2) - shiftdown; 
-%     pos(1) = pos(1) - shiftleft(i); 
-%     set(ax{i}, 'Position', pos);
-%     L.Location = 'southeast';
-% end
-% 
-% shiftleft=[0.02 0.06 0.1];
-% for i=5:7
-%     pos = get(ax{i}, 'Position');
-%     pos(1) = pos(1) - shiftleft(i-4); 
-%     set(ax{i}, 'Position', pos);
-%     L.Location = 'southeast';
-% end
-% 
-% % Adds colorbar
-% h = axes(fig,'visible','off'); 
-% c = colorbar(h,'Position',[0.75 0.11 0.015 0.34]); 
-% colormap(c,slanCM('viridis'));
-% 
-% figpath='C:\Users\mitg1n25\Desktop\PhD\PhD_Coding\docs\figures\WaterMasses_RREX';
-% imgname=imgname2015{q}; % Name of the image being stored
-% figname=fullfile(figpath, imgname);
-% 
-% % Save the figure
-% set(gca, 'LooseInset', get(gca, 'TightInset'));
-% % print(gcf,figname, '-dpng', '-r0', '-loose')
-
-%% 2017
-
-% ax={};
-% fig=figure(); set(gcf, 'Position',  [100, 100, 1600, 800])
-% for i=1:M
-%     ax{i}=subplot(2,4,sp(i));
-%     pcolor(xdim2017,pres2017(:,b),X2017(:,b,i)); shading flat
-%     caxis([0 1]); colormap(ax{i},slanCM('viridis'));
-%     set(gca,'YDir','reverse'); ylim([100 4500])
-%     title(WT2017(i,:)); xlim(xlims(q,:));
-%     %hold on; area(xdim2017,bottom2017(b),5000,'facecolor',[0.7 0.7 0.7],'edgecolor','k'); hold off
-%     if i==1 || i==5
-%         ylabel('Pressure [dbar]');
-%     elseif i==4 || i==7
-%         set(gca, 'YAxisLocation', 'right')
-%         ylabel('Pressure [dbar]','Rotation',-90);
-%     else
-%         set(gca, 'YTickLabel','');
-%     end
-%     if i>4
-%         xlabel(xdimlabel);
-%     end
-%     set(gca, 'TickDir', 'out');
-% end
-% sgtitle(['Water Masses RREX2017 - ' titles{q} ' Transect'])
-% 
-% shiftdown=0.06;
-% shiftleft=[0.0 0.04 0.08 0.12];
-% for i=1:4
-%     pos = get(ax{i}, 'Position');
-%     pos(2) = pos(2) - shiftdown; 
-%     pos(1) = pos(1) - shiftleft(i); 
-%     set(ax{i}, 'Position', pos);
-%     L.Location = 'southeast';
-% end
-% 
-% shiftleft=[0.02 0.06 0.1];
-% for i=5:7
-%     pos = get(ax{i}, 'Position');
-%     pos(1) = pos(1) - shiftleft(i-4); 
-%     set(ax{i}, 'Position', pos);
-%     L.Location = 'southeast';
-% end
-% 
-% % Adds colorbar
-% h = axes(fig,'visible','off'); 
-% c = colorbar(h,'Position',[0.75 0.11 0.015 0.34]); 
-% colormap(c,slanCM('viridis'));
-% 
-% 
-% imgname=imgname2017{q}; % Name of the image being stored
-% figname=fullfile(figpath, imgname);
-% 
-% % Save the figure
-% set(gca, 'LooseInset', get(gca, 'TightInset'));
-% % print(gcf,figname, '-dpng', '-r0', '-loose')
+imgnameup={'01.WaterMassPercentage_up_ridge.png','02.WaterMassPercentage_up_south.png','03.WaterMassPercentage_up_ovide.png','04.WaterMassPercentage_up_north.png'};
 
 %% We do the same plot, but this time I consider NACW + SAIW
 
@@ -268,6 +152,58 @@ figname=fullfile(figpath, imgname);
 % Save the figure
 set(gca, 'LooseInset', get(gca, 'TightInset'));
 print(gcf,figname, '-dpng', '-r0', '-loose')
+
+%% The same figures but for the upper 1000 m water masses
+
+scale=0.9;
+fig=figure(); set(gcf, 'Position',  [100, 100, 1300, 700])
+t=tiledlayout(2,3,"TileSpacing","compact","Padding","compact");
+ax=cell(6,1);
+for i=1:3
+    ax{i}=nexttile(i);
+        pcolor(xdim2015,pres2015(:,a),X2015_6(:,a,i)); shading flat
+        caxis([0 1]); colormap(ax{i},slanCM('viridis'));
+        set(gca,'YDir','reverse');  set(gca, 'TickDir', 'out');
+        xlim(xlims(q,:)); title(WT{i}); 
+        if q==1
+            hold on; area(xdim2015,bottom2015(a),4480,'facecolor',[0.7 0.7 0.7],'edgecolor','k','EdgeAlpha',0.5); hold off;
+            ylim([100 1000]); 
+        else
+            hold on; area(xdim2015,bottom2015(a),2980,'facecolor',[0.7 0.7 0.7],'edgecolor','k','EdgeAlpha',0.5); hold off;
+            ylim([100 3000]);
+        end
+    ax{i+3}=nexttile(i+3);
+        pcolor(xdim2017,pres2017(:,b),X2017_6(:,b,i)); shading flat
+        caxis([0 1]); colormap(ax{i+3},slanCM('viridis'));
+        set(gca,'YDir','reverse'); ylim([100 4500])
+        title(WT{i}); xlim(xlims(q,:));
+        set(gca, 'TickDir', 'out');
+        if q==1
+            hold on; area(xdim2015,bottom2015(a),4480,'facecolor',[0.7 0.7 0.7],'edgecolor','k','EdgeAlpha',0.5); hold off;
+            ylim([100 1000]); 
+        else
+            hold on; area(xdim2015,bottom2015(a),2980,'facecolor',[0.7 0.7 0.7],'edgecolor','k','EdgeAlpha',0.5); hold off;
+            ylim([100 3000]);
+        end
+     % Adds labels and changes ticks
+     xlabel(ax{i+3},xdimlabel);
+     if i==1
+        ylabel(ax{i},'Pressure [dbar]');
+        ylabel(ax{i+3},'Pressure [dbar]');
+     end
+end
+h = axes(fig,'visible','off'); 
+c = colorbar(h,'Position',[0.96 0.06 0.015 0.91]); 
+colormap(c,slanCM('viridis'));
+
+
+imgname=imgnameup{q}; % Name of the image being stored
+figname=fullfile(figpath, imgname);
+
+% Save the figure
+set(gca, 'LooseInset', get(gca, 'TightInset'));
+print(gcf,figname, '-dpng', '-r0', '-loose')
+
 
 %% Compares SPMW with IW for the 2015 period
 
@@ -343,9 +279,9 @@ T_ovide2015=NaN(N,2); T_ovide2017=NaN(N,2);
 T_north2015=NaN(N,2); T_north2017=NaN(N,1);
 for qq=1:N % Counter for layers
         [T2015(qq,:), T2017(qq,:), ~, ~, T_ridge2015(qq,:), T_ridge2017(qq,:)] = RREX_ComputesTransport_WaterMasses(transect{1},WaterMasses{qq},'total');
-        % [~, ~, ~, ~, T_south2015(qq,:), T_south2017(qq,:)] = RREX_ComputesTransport_WaterMasses(transect{2},WaterMasses{qq},'mean');
-        % [~, ~, ~, ~, T_ovide2015(qq,:), T_ovide2017(qq,:)] = RREX_ComputesTransport_WaterMasses(transect{3},WaterMasses{qq},'mean');
-        % [~, ~, ~, ~, T_north2015(qq,:), T_north2017(qq,:)] = RREX_ComputesTransport_WaterMasses(transect{4},WaterMasses{qq},'mean');
+        [~, ~, ~, ~, T_south2015(qq,:), T_south2017(qq,:)] = RREX_ComputesTransport_WaterMasses(transect{2},WaterMasses{qq},'total');
+        [~, ~, ~, ~, T_ovide2015(qq,:), T_ovide2017(qq,:)] = RREX_ComputesTransport_WaterMasses(transect{3},WaterMasses{qq},'total');
+        [~, ~, ~, ~, T_north2015(qq,:), T_north2017(qq,:)] = RREX_ComputesTransport_WaterMasses(transect{4},WaterMasses{qq},'total');
 end
 
 sum(T_ridge2015,1)
@@ -359,18 +295,18 @@ sum(T_ridge2015,1)
 
 %% Convert magnitude matrix to a table in word format
 
-% % Selects the year to copy
+% Selects the year to copy
 % T_ridgeT=[T_ridge2015; sum(T_ridge2015,1)];
 % headers = {'2015', '50.1 - 53.3N', '53.3 - 56.7N', '56.7 - 58.9N', '58.9 - 63.4N'}; % 2015
-% %T_ridgeT=[T_ridge2017; sum(T_ridge2017,1)];
-% %headers = {'2017', '49.1 - 52.7N', '52.7 - 56.7N', '56.7 - 58.9N', '58.9 - 63.4N'}; % 2017
-% 
-% data_with_headers = [headers;[[WaterMasses,'Total']', num2cell(T_ridgeT)]];
-% 
-% % Creates table from matrix
-% table = array2table(data_with_headers);
-% 
-% % Exports to excel
-% writetable(table, 'T_ridge2015.xlsx');
+T_ridgeT=[T_ridge2017; sum(T_ridge2017,1)];
+headers = {'2017', '49.1 - 52.7N', '52.7 - 56.7N', '56.7 - 58.9N', '58.9 - 63.4N'}; % 2017
+
+data_with_headers = [headers;[[WaterMasses,'Total']', num2cell(T_ridgeT)]];
+
+% Creates table from matrix
+table = array2table(data_with_headers);
+
+% Exports to excel
+writetable(table, 'T_ridge2015.xlsx');
 
 
